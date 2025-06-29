@@ -1,12 +1,15 @@
 # Islamic Knowledge Graph 🕌
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yourusername/islamic-knowledge-graph)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/fsafey/islamic-knowledge-graph)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-blue.svg)](https://your-site.netlify.app)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue.svg)](https://islamic-knowledge-graph.netlify.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black.svg)](https://github.com/fsafey/islamic-knowledge-graph)
 
 **Interactive exploration of Islamic scholarship through an innovative knowledge graph visualization.**
 
 Discover connections between scholars, texts, concepts, and contemporary applications in Islamic intellectual tradition. Built with modern web technologies and optimized for performance, accessibility, and educational impact.
+
+> **🔗 Related Project**: This is a standalone visualization extracted from the [Imam Lib Masha Allah](https://github.com/fsafey/imam-lib-masha-allah) project. The Islamic Knowledge Graph operates independently with its own repository, deployment pipeline, and development workflow.
 
 ---
 
@@ -35,20 +38,23 @@ Discover connections between scholars, texts, concepts, and contemporary applica
 
 ## 🚀 **Quick Start**
 
-### **Option 1: Direct Deployment**
+### **Option 1: Visit Live Site**
+🌐 **Live Demo**: https://islamic-knowledge-graph.netlify.app
+
+### **Option 2: Local Development**
 ```bash
-git clone https://github.com/yourusername/islamic-knowledge-graph.git
+git clone https://github.com/fsafey/islamic-knowledge-graph.git
 cd islamic-knowledge-graph
 python3 -m http.server 8080
 open http://localhost:8080
 ```
 
-### **Option 2: One-Click Deploy**
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yourusername/islamic-knowledge-graph)
+### **Option 3: Fork & Deploy**
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/fsafey/islamic-knowledge-graph)
 
-### **Option 3: Local Development**
+### **Development Setup**
 ```bash
-# No build process required
+# No build process required - pure ES6 modules
 # Serve files locally (required for ES6 modules)
 npx serve .
 # or
@@ -166,6 +172,49 @@ islamic-knowledge-graph/
 
 ---
 
+## 🏗️ **Repository & Development Workflow**
+
+### **Independent Repository Structure**
+This project maintains **complete separation** from the main Imam Lib Masha Allah project:
+
+```
+📁 Main Project
+├── Repository: fsafey/imam-lib-masha-allah
+├── Purpose: Islamic library application with Supabase backend
+└── Directory: /Users/farieds/imam-lib-masha-allah/
+
+🕌 Islamic Knowledge Graph (This Project)
+├── Repository: fsafey/islamic-knowledge-graph
+├── Purpose: Standalone D3.js visualization
+├── Live Site: https://islamic-knowledge-graph.netlify.app
+└── Directory: /Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph-deploy/
+```
+
+### **Development Commands**
+
+**For this Knowledge Graph:**
+```bash
+cd /Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph-deploy
+git add .
+git commit -m "Knowledge graph improvements"
+git push  # → fsafey/islamic-knowledge-graph
+```
+
+**For main Imam Lib project:**
+```bash
+cd /Users/farieds/imam-lib-masha-allah
+git add .
+git commit -m "Main library improvements"  
+git push  # → fsafey/imam-lib-masha-allah
+```
+
+### **Deployment Pipeline**
+- **GitHub**: Automatic CI/CD validation on push
+- **Netlify**: Auto-deploy from main branch
+- **Live Updates**: Changes appear instantly at https://islamic-knowledge-graph.netlify.app
+
+---
+
 ## 🤝 **Contributing**
 
 We welcome contributions to expand Islamic scholarship accessibility! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -201,8 +250,8 @@ Developing cutting-edge educational technologies that bridge traditional scholar
 
 ## 📞 **Support & Contact**
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/islamic-knowledge-graph/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/islamic-knowledge-graph/discussions)
+- **Issues**: [GitHub Issues](https://github.com/fsafey/islamic-knowledge-graph/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/fsafey/islamic-knowledge-graph/discussions)
 - **Educational Content**: Contact Al-Mufid Library for scholarly inquiries
 - **Technical Support**: Contact VantageWorks for technical assistance
 
