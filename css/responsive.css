@@ -1,0 +1,213 @@
+/**
+ * Responsive Design
+ * Mobile and tablet breakpoints
+ */
+
+/* Mobile Responsiveness Enhancements for Dual-Feature System */
+@media (max-width: 768px) {
+    body {
+        padding: 16px;
+    }
+    
+    .container {
+        border-radius: 16px;
+    }
+    
+    .search-bar {
+        width: 240px;
+        font-size: 14px;
+        padding: 12px 18px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 24px;
+        align-items: stretch;
+        padding: 24px;
+    }
+    
+    .legend {
+        justify-content: center;
+        gap: 16px;
+    }
+    
+    .legend-item {
+        font-size: 0.8rem;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .header p {
+        font-size: 1rem;
+    }
+    
+    .branding-bar {
+        padding: 20px 24px;
+    }
+    
+    .library-branding {
+        gap: 20px;
+    }
+    
+    .library-title {
+        font-size: 1.875rem;
+    }
+    
+    .main-content {
+        flex-direction: column !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100vh;
+        z-index: 1000;
+        transition: right 0.3s ease;
+        background: linear-gradient(135deg, #2856A3 0%, #5a7db8 100%);
+    }
+    
+    .sidebar.mobile-open {
+        right: 0;
+    }
+    
+    .graph-area {
+        width: 100% !important;
+        height: 60vh;
+    }
+    
+    /* Mobile learning path cards */
+    .learning-path-card {
+        margin-bottom: 16px !important;
+        padding: 16px !important;
+    }
+    
+    /* Mobile search enhancements */
+    .search-container {
+        margin-bottom: 16px;
+    }
+    
+    .mobile-sidebar-toggle {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+    }
+    
+    .container {
+        border-radius: 12px;
+        margin: 12px;
+    }
+    
+    .header {
+        padding: 32px 20px;
+    }
+    
+    .header h1 {
+        font-size: 1.75rem;
+        margin-bottom: 12px;
+    }
+    
+    .header p {
+        font-size: 0.95rem;
+    }
+    
+    .controls {
+        padding: 20px;
+    }
+    
+    .branding-bar {
+        padding: 16px 20px;
+    }
+    
+    .library-title {
+        font-size: 1.625rem;
+    }
+    
+    .library-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .legend {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .search-bar {
+        width: 100%;
+        max-width: 280px;
+        font-size: 14px;
+    }
+    
+    .learning-path-card {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* Ultra-small screen adaptations */
+    .graph-area {
+        height: 50vh;
+    }
+    
+    .library-logo {
+        height: 48px !important;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 95%;
+    }
+    
+    .search-bar {
+        width: 250px;
+    }
+    
+    .learning-path-card {
+        margin-bottom: 12px;
+    }
+}
+
+/* Mobile sidebar toggle button */
+.mobile-sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(40, 86, 163, 0.9);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    z-index: 1001;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(40, 86, 163, 0.3);
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+@media (max-width: 768px) {
+    .mobile-sidebar-toggle {
+        display: block;
+    }
+}
+
+.mobile-sidebar-toggle:hover {
+    background: rgba(40, 86, 163, 1);
+    transform: scale(1.05);
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .library-logo {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}

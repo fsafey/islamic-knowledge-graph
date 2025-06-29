@@ -1,0 +1,524 @@
+/**
+ * UI Components
+ * Search, modal, sidebar, mobile elements, interactive guide
+ */
+
+/* CSS Custom Properties for UI Components */
+:root {
+    --interactive-guide-bg: rgba(255, 255, 255, 0.85);
+    --interactive-guide-border: rgba(125, 179, 211, 0.25);
+    --interactive-guide-backdrop: blur(8px);
+    --interactive-guide-heading: #2856A3;
+    --interactive-guide-text: #555;
+    --interactive-guide-search-bg: rgba(125, 179, 211, 0.08);
+    --interactive-guide-search-border: rgba(125, 179, 211, 0.2);
+    --interactive-guide-connect-bg: rgba(244, 198, 79, 0.08);
+    --interactive-guide-connect-border: rgba(244, 198, 79, 0.2);
+    --interactive-guide-connect-color: #d4a343;
+    --interactive-guide-learn-bg: rgba(90, 155, 151, 0.08);
+    --interactive-guide-learn-border: rgba(90, 155, 151, 0.2);
+    --interactive-guide-learn-color: #5a9b97;
+    --graph-layout-bg: rgba(255, 255, 255, 0.05);
+    --graph-sidebar-gradient: linear-gradient(135deg, rgba(40, 86, 163, 0.96) 0%, rgba(125, 179, 211, 0.96) 100%);
+    --footer-gradient: linear-gradient(135deg, #2856A3 0%, #7db3d3 100%);
+}
+
+/* Interactive Guide Container */
+.interactive-guide {
+    background: var(--interactive-guide-bg);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    border: 1px solid var(--interactive-guide-border);
+    backdrop-filter: var(--interactive-guide-backdrop);
+}
+
+/* Interactive Guide Header */
+.interactive-guide-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.interactive-guide-header h2 {
+    color: var(--interactive-guide-heading);
+    font-size: 1.75rem;
+    margin: 0 0 12px 0;
+    font-weight: 600;
+}
+
+.interactive-guide-header p {
+    color: var(--interactive-guide-text);
+    font-size: 1rem;
+    margin: 0;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Interactive Guide Grid */
+.interactive-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+/* Interactive Guide Items */
+.interactive-guide-item {
+    text-align: center;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid;
+}
+
+.interactive-guide-item.search {
+    background: var(--interactive-guide-search-bg);
+    border-color: var(--interactive-guide-search-border);
+}
+
+.interactive-guide-item.connect {
+    background: var(--interactive-guide-connect-bg);
+    border-color: var(--interactive-guide-connect-border);
+}
+
+.interactive-guide-item.learn {
+    background: var(--interactive-guide-learn-bg);
+    border-color: var(--interactive-guide-learn-border);
+}
+
+.interactive-guide-item-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.interactive-guide-item h3 {
+    font-size: 1.1rem;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.interactive-guide-item.search h3 {
+    color: var(--interactive-guide-heading);
+}
+
+.interactive-guide-item.connect h3 {
+    color: var(--interactive-guide-connect-color);
+}
+
+.interactive-guide-item.learn h3 {
+    color: var(--interactive-guide-learn-color);
+}
+
+.interactive-guide-item p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Legend Section */
+.legend-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--interactive-guide-border);
+}
+
+.legend-section h3 {
+    text-align: center;
+    color: var(--interactive-guide-heading);
+    font-size: 1.2rem;
+    margin: 0 0 20px 0;
+    font-weight: 600;
+}
+
+.legend-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.legend-color.scholars {
+    background: #2856A3;
+}
+
+.legend-color.books {
+    background: #7db3d3;
+}
+
+.legend-color.theology {
+    background: #f4c64f;
+}
+
+.legend-color.practices {
+    background: #5a9b97;
+}
+
+.legend-color.contemporary {
+    background: #8e44ad;
+}
+
+.legend-color.concepts {
+    background: #4a5568;
+}
+
+.legend-item span {
+    color: #333;
+}
+
+/* Search Integration Section */
+.search-integration {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(125, 179, 211, 0.3);
+}
+
+.search-container-main {
+    position: relative;
+}
+
+.search-input-main {
+    padding: 12px 20px;
+    border: 2px solid #7db3d3;
+    border-radius: 25px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 8px rgba(125, 179, 211, 0.25);
+    font-weight: 400;
+}
+
+.search-suggestions-main {
+    position: absolute;
+    top: calc(100% - 4px);
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border: 2px solid #7db3d3;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 16px rgba(125, 179, 211, 0.35);
+    display: none;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Graph Layout Components */
+.graph-layout {
+    display: flex;
+    height: 700px;
+    gap: 0;
+}
+
+/* Graph Sidebar */
+.graph-sidebar {
+    width: 400px;
+    min-width: 400px;
+    background: var(--graph-sidebar-gradient);
+    border-radius: 16px 0 0 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.graph-sidebar-spacer {
+    height: 280px;
+    flex-shrink: 0;
+}
+
+.graph-sidebar-content {
+    flex: 1;
+    padding: 24px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.graph-sidebar-content-inner {
+    opacity: 0.7;
+}
+
+.graph-sidebar-content h3 {
+    margin: 0 0 12px 0;
+    color: #f4c64f;
+    font-size: 1.2rem;
+}
+
+.graph-sidebar-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Graph Area */
+.graph-area {
+    flex: 1;
+    background: var(--graph-layout-bg);
+    border-radius: 0 16px 16px 0;
+}
+
+.graph-svg {
+    width: 100%;
+    height: 700px;
+}
+
+/* Footer */
+.footer {
+    background: var(--footer-gradient);
+    color: white;
+    padding: 24px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 0.95rem;
+}
+
+.footer-powered-by {
+    color: rgba(255,255,255,0.95);
+    font-weight: 500;
+}
+
+.footer-logo {
+    height: 26px;
+    width: auto;
+    opacity: 0.95;
+    filter: brightness(1.1);
+}
+
+.footer-text {
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+}
+
+/* Search Components */
+.search-bar {
+    padding: 12px 20px;
+    border: 2px solid #7db3d3;
+    border-radius: 25px;
+    font-size: 14px;
+    width: 280px;
+    outline: none;
+    font-family: 'Georgia', serif;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 8px rgba(125, 179, 211, 0.2);
+}
+
+#searchInput:focus {
+    border-color: #f4c64f !important;
+    box-shadow: 0 0 16px rgba(244, 198, 79, 0.45), 0 6px 20px rgba(125, 179, 211, 0.35) !important;
+    transform: translateY(-2px);
+    background: #fefefe !important;
+}
+
+.search-bar::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.search-container {
+    margin-bottom: 16px;
+}
+
+.suggestion-item:hover {
+    background: #f8f9fa !important;
+    border-left: 3px solid #2e8b57 !important;
+}
+
+/* Controls and Legend */
+.controls {
+    padding: 32px; /* 8px grid: 4 units */
+    background: linear-gradient(135deg, #faf7f2 0%, #f7f3ef 100%);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(212, 165, 116, 0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px; /* 8px grid: 3 units */
+    box-shadow: inset 0 -3px 6px rgba(244, 198, 79, 0.12);
+}
+
+/* Legacy legend styles - keeping for backward compatibility */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.legend-item:hover {
+    background: rgba(40, 86, 163, 0.05);
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    transition: all 0.2s ease;
+}
+
+/* Instructions */
+.instructions {
+    padding: 24px 32px; /* 8px grid: 3x4 and 4x8 */
+    background: linear-gradient(135deg, rgba(125, 179, 211, 0.08) 0%, rgba(244, 198, 79, 0.08) 100%);
+    color: #2856A3;
+    text-align: center;
+    font-style: italic;
+    font-weight: 500;
+    border-top: 3px solid rgba(125, 179, 211, 0.25);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+
+/* Learning Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(40, 86, 163, 0.3);
+    border: 1px solid rgba(244, 198, 79, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #2856A3;
+    z-index: 2001;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(40, 86, 163, 0.1);
+    transform: scale(1.1);
+}
+
+/* Mobile Sidebar */
+.mobile-sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(40, 86, 163, 0.9);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    z-index: 1001;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(40, 86, 163, 0.3);
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+.mobile-sidebar-toggle:hover {
+    background: rgba(40, 86, 163, 1);
+    transform: scale(1.05);
+}
+
+/* Sidebar Scrollbar */
+#graphSidebar ::-webkit-scrollbar {
+    width: 6px;
+}
+
+#graphSidebar ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+#graphSidebar ::-webkit-scrollbar-thumb {
+    background: rgba(244, 198, 79, 0.6);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+#graphSidebar ::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 198, 79, 0.8);
+}
+
+.sidebar-scroll-content {
+    scroll-behavior: smooth;
+    padding-bottom: 24px; /* Extra space at bottom for comfortable scrolling */
+}
+
+/* Visual indicator for more content */
+.has-more-content::after {
+    content: "▼ Scroll for more";
+    position: sticky;
+    bottom: 0;
+    display: block;
+    text-align: center;
+    padding: 8px;
+    font-size: 0.7rem;
+    color: rgba(244, 198, 79, 0.7);
+    background: linear-gradient(to top, rgba(40, 86, 163, 0.96) 70%, transparent);
+    animation: pulse 2s infinite;
+}
+
+/* Additional pulse animation for scroll content */
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}

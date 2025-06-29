@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Islamic Scholarship - Interactive Knowledge Graph</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    
+    <!-- Modular CSS -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/branding.css">
+    <link rel="stylesheet" href="css/learning-paths.css">
+    <link rel="stylesheet" href="css/graph.css">
+    <link rel="stylesheet" href="css/ui-components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Enhanced Branding Bar -->
+        <div class="branding-bar">
+            <div class="library-branding">
+                <img src="imam-logo.jpg" alt="Al-Mufid Library" class="library-logo">
+                <div>
+                    <h1 class="library-title">Al-Mufid Library</h1>
+                    <p class="library-subtitle">Digital Islamic Scholarship Repository</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Header -->
+        <div class="header">
+            <h1>Interactive Islamic Scholarship Explorer</h1>
+            <p>Explore connections that traditional search cannot reveal - trace how Islamic scholars, texts, and concepts interconnect across 14 centuries of scholarship.</p>
+        </div>
+        
+        <!-- Progressive Learning Path Interface -->
+        <div id="learningPathContainer" class="learning-path-container">
+            <!-- Learning Path Trigger -->
+            <div id="learningPathTrigger" class="learning-path-trigger">
+                <p>
+                    New to the knowledge graph? <span id="learningPathTriggerText" class="learning-path-trigger-text">Find your learning path →</span>
+                </p>
+            </div>
+            
+            <!-- Expandable Learning Paths Section -->
+            <div id="learningPathsExpanded" class="learning-paths-expanded">
+                
+                <!-- Header with User Type Selection -->
+                <div class="learning-paths-header">
+                    <h3>Choose Your Learning Journey</h3>
+                    <p>Select a path based on your background and goals</p>
+                </div>
+                
+                <!-- User Type Tabs -->
+                <div class="user-type-tabs">
+                    <button class="user-type-tab active" data-type="beginner">
+                        🌱 Beginner
+                    </button>
+                    <button class="user-type-tab" data-type="student">
+                        📚 Student
+                    </button>
+                    <button class="user-type-tab" data-type="scholar">
+                        🔍 Scholar
+                    </button>
+                </div>
+                
+                <!-- Learning Path Content Areas -->
+                <div class="learning-path-content">
+                    
+                    <!-- Beginner Paths -->
+                    <div id="beginner-paths" class="user-type-content active">
+                        <!-- Introduction for Beginners -->
+                        <div class="learning-path-section-header beginner">
+                            <h3>🎓 Starting Your Journey</h3>
+                            <p>
+                                Begin with fundamental concepts and discover how they connect to contemporary Islamic practice. Each path shows you classical foundations and their modern applications.
+                            </p>
+                        </div>
+                        
+                        <!-- Persona-Based Learning Cards -->
+                        <div class="learning-path-cards-grid">
+                            
+                            <!-- For New Muslims -->
+                            <div class="learning-path-card new-muslim" data-learning-path="new_muslim_foundations">
+                                <h3>🌟 For New Muslims</h3>
+                                <p>
+                                    Start with fundamental concepts like Tawhid and Imamate, then explore their connections to daily practices and contemporary Islamic life.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>📚 Start with:</strong>
+                                    <span>"Imam Ali" → "Tawhid" → "Salah" → "Contemporary Islamic Life"</span>
+                                </div>
+                                <div class="learning-path-card-footer">✨ Includes contemporary applications and modern guidance</div>
+                            </div>
+                            
+                            <!-- For Young Adults -->
+                            <div class="learning-path-card young-adult" data-learning-path="young_adult_engagement">
+                                <h3>🎯 For Young Adults</h3>
+                                <p>
+                                    Connect traditional Islamic values with modern challenges including social media ethics, career guidance, and contemporary relationships.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>🔗 Explore:</strong>
+                                    <span>"Contemporary Ijtihad" → "Islamic Ethics" → "Modern Applications"</span>
+                                </div>
+                                <div class="learning-path-card-footer">🌐 Focus on contemporary relevance and practical guidance</div>
+                            </div>
+                            
+                            <!-- For Parents -->
+                            <div class="learning-path-card parental" data-learning-path="parental_guidance">
+                                <h3>👨‍👩‍👧‍👦 For Parents</h3>
+                                <p>
+                                    Learn how to explain Islamic concepts to children and teens, with age-appropriate approaches and contemporary applications.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>👪 Family Focus:</strong>
+                                    <span>"Family Values" → "Children's Education" → "Practical Teaching"</span>
+                                </div>
+                                <div class="learning-path-card-footer">👶 Age-appropriate explanations and teaching methods</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Paths -->
+                    <div id="student-paths" class="user-type-content">
+                        <div class="learning-path-section-header student">
+                            <h3>📖 Academic Exploration</h3>
+                            <p>
+                                Dive deeper into Islamic scholarship with structured learning paths that connect classical texts to contemporary academic discourse.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card classical-texts">
+                                <h3>📚 Classical Texts</h3>
+                                <p>
+                                    Explore foundational works like Nahj al-Balagha and Al-Kafi with historical context and scholarly interpretations.
+                                </p>
+                            </div>
+                            
+                            <div class="learning-path-card theological">
+                                <h3>🏛️ Theological Development</h3>
+                                <p>
+                                    Trace the evolution of Shia theology through major scholars and their contributions to Islamic thought.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scholar Paths -->
+                    <div id="scholar-paths" class="user-type-content">
+                        <div class="learning-path-section-header scholar">
+                            <h3>🔬 Research & Analysis</h3>
+                            <p>
+                                Advanced pathways for scholarly research, cross-referencing, and contemporary application of Islamic principles.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card contemporary">
+                                <h3>🔍 Contemporary Applications</h3>
+                                <p>
+                                    Explore how classical Islamic principles address modern challenges in law, ethics, and social issues.
+                                </p>
+                            </div>
+                            
+                            <div class="learning-path-card comparative">
+                                <h3>⚖️ Comparative Studies</h3>
+                                <p>
+                                    Compare different scholarly interpretations and methodological approaches across Islamic schools of thought.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive Guide -->
+        <div class="interactive-guide">
+            <div class="interactive-guide-header">
+                <h2>How to Explore</h2>
+                <p>
+                    Discover Islamic scholarship through visual connections and guided exploration
+                </p>
+            </div>
+            
+            <div class="interactive-guide-grid">
+                <div class="interactive-guide-item search">
+                    <div class="interactive-guide-item-icon">🔍</div>
+                    <h3>Search & Navigate</h3>
+                    <p>Use the search box to find specific scholars, books, or concepts. Try "Imam Ali" or "Tawhid"</p>
+                </div>
+                
+                <div class="interactive-guide-item connect">
+                    <div class="interactive-guide-item-icon">🔗</div>
+                    <h3>Discover Connections</h3>
+                    <p>Hover over nodes to see related concepts. Click to pin detailed information and quotes</p>
+                </div>
+                
+                <div class="interactive-guide-item learn">
+                    <div class="interactive-guide-item-icon">📚</div>
+                    <h3>Learn Progressively</h3>
+                    <p>Follow guided learning paths based on your background and interests</p>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="legend-section">
+                <h3>Node Types</h3>
+                <div class="legend-grid">
+                    <div class="legend-item" title="Islamic scholars and religious authorities">
+                        <div class="legend-color scholars"></div>
+                        <span>Scholars</span>
+                    </div>
+                    <div class="legend-item" title="Religious texts and literature">
+                        <div class="legend-color books"></div>
+                        <span>Books</span>
+                    </div>
+                    <div class="legend-item" title="Theological and doctrinal concepts">
+                        <div class="legend-color theology"></div>
+                        <span>Theology</span>
+                    </div>
+                    <div class="legend-item" title="Religious practices and rituals">
+                        <div class="legend-color practices"></div>
+                        <span>Practices</span>
+                    </div>
+                    <div class="legend-item" title="Contemporary applications and modern issues">
+                        <div class="legend-color contemporary"></div>
+                        <span>Contemporary</span>
+                    </div>
+                    <div class="legend-item" title="Advanced concepts and philosophical ideas">
+                        <div class="legend-color concepts"></div>
+                        <span>Concepts</span>
+                    </div>
+                </div>
+                
+                <!-- Integrated Search Section -->
+                <div class="search-integration">
+                    <div class="search-container-main">
+                        <input type="text" class="search-input-main" placeholder="Search: Imam Ali, Tawhid, Nahj al-Balagha..." id="searchInput" aria-label="Search Islamic knowledge graph" autocomplete="off">
+                        <div id="searchSuggestions" class="search-suggestions-main"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        <!-- Graph Layout with Dedicated Panel Space -->
+        <div class="graph-layout">
+            <!-- Left Panel - Dedicated Space -->
+            <div id="graphSidebar" class="graph-sidebar">
+                <!-- Spacer to avoid search bar overlap -->
+                <div class="graph-sidebar-spacer"></div>
+                <!-- Panel content will be inserted here -->
+                <div id="sidebarContent" class="graph-sidebar-content">
+                    <div class="graph-sidebar-content-inner">
+                        <h3>📚 Knowledge Explorer</h3>
+                        <p>• <strong>Search</strong> scholars, books, concepts<br>• <strong>Hover</strong> nodes for details & connections<br>• <strong>Click</strong> to pin content & view quotes<br>• <strong>Learning paths</strong> in header area<br>• <strong>Keyboard shortcuts</strong> for navigation</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Graph Area -->
+            <div class="graph-area">
+                <svg id="graph" class="graph-svg"></svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="footer-content">
+            <span class="footer-powered-by">Powered by</span>
+            <img src="vworks-logo.png" alt="VantageWorks Knowledge Systems" class="footer-logo">
+            <span class="footer-text">Knowledge Systems</span>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

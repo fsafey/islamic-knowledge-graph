@@ -1,0 +1,72 @@
+[build]
+  # No build process needed - static ES6 modules
+  publish = "."
+  command = "echo 'Static deployment - no build required'"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[headers]]
+  # Apply to all files
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
+[[headers]]
+  # JavaScript modules require proper MIME type
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  # CSS files
+  for = "*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  # HTML files
+  for = "*.html"
+  [headers.values]
+    Content-Type = "text/html; charset=utf-8"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  # Images
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# Redirect rules
+[[redirects]]
+  from = "/graph"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/knowledge-graph"
+  to = "/"
+  status = 301
+
+# CSP for enhanced security (ES6 modules compatible)
+[[headers]]
+  for = "/"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self';"

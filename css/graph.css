@@ -1,0 +1,62 @@
+/**
+ * Graph Visualization
+ * SVG elements, nodes, links, labels
+ */
+
+#graph {
+    background: #f7f3ef;
+    backdrop-filter: blur(10px);
+    border-top: 2px solid rgba(125, 179, 211, 0.2);
+    position: relative;
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.node {
+    cursor: pointer;
+    stroke-width: 2.5;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.node:hover {
+    stroke-width: 4;
+    filter: brightness(1.15) drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    transform: scale(1.05);
+}
+
+.link {
+    stroke: #7f8c8d;
+    stroke-opacity: 0.3;
+    stroke-width: 1.8;
+    transition: all 0.3s ease;
+}
+
+.link.highlighted {
+    stroke-opacity: 0.9;
+    stroke-width: 3.5;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+
+.node-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    fill: #2c2c2c;
+    text-shadow: 0 0 4px white, 0 0 4px white, 0 1px 2px rgba(0,0,0,0.1);
+    font-family: 'Georgia', serif;
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}

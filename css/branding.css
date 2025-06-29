@@ -1,0 +1,74 @@
+/**
+ * Branding Components
+ * Header, logo, title styling
+ */
+
+.branding-bar {
+    background: linear-gradient(135deg, #f7f3ef 0%, #faf7f2 100%);
+    border-bottom: 4px solid #2856A3; /* Stronger visual anchor */
+    padding: 24px 32px; /* 8px grid: 3x4 and 4x8 */
+    position: relative;
+    overflow: hidden;
+}
+
+.branding-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(40, 86, 163, 0.02) 20px,
+        rgba(40, 86, 163, 0.02) 40px
+    );
+    z-index: 1;
+}
+
+.library-branding {
+    display: flex;
+    align-items: center;
+    gap: 24px; /* 8px grid: 3 units */
+    max-width: 1440px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.library-logo {
+    height: 64px; /* 8px grid: 8 units */
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(40, 86, 163, 0.25);
+    border: 2px solid rgba(244, 198, 79, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.library-logo:hover {
+    transform: scale(1.02);
+}
+
+.library-title {
+    font-family: 'Georgia', serif;
+    font-size: 2.25rem; /* Consistent rem units */
+    font-weight: 600; /* Stronger hierarchy */
+    color: #2856A3;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(40, 86, 163, 0.15);
+    letter-spacing: -0.02em; /* Improved readability */
+    line-height: 1.2;
+}
+
+.library-subtitle {
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    color: #d4a574;
+    margin: 4px 0 0 0; /* 8px grid: 0.5 units */
+    font-style: italic;
+    opacity: 0.85;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
