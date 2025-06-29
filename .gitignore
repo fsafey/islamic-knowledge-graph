@@ -47,3 +47,5 @@ server.log
 .claude/
 agent-reports/
 PHASE2-DOM-OPTIMIZATION-REPORT.md
+# Local Netlify folder
+.netlify
