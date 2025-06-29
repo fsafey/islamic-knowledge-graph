@@ -187,14 +187,14 @@ This project maintains **complete separation** from the main Imam Lib Masha Alla
 ├── Repository: fsafey/islamic-knowledge-graph
 ├── Purpose: Standalone D3.js visualization
 ├── Live Site: https://islamic-knowledge-graph.netlify.app
-└── Directory: /Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph-deploy/
+└── Directory: /Users/farieds/lab/islamic-knowledge-graph-deploy/
 ```
 
 ### **Development Commands**
 
 **For this Knowledge Graph:**
 ```bash
-cd /Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph-deploy
+cd /Users/farieds/lab/islamic-knowledge-graph-deploy
 git add .
 git commit -m "Knowledge graph improvements"
 git push  # → fsafey/islamic-knowledge-graph

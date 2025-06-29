@@ -1,9 +1,9 @@
-# 🚀 Quick Start - Modular Knowledge Graph
+# 🚀 Quick Start - Islamic Knowledge Graph
 
 ## Single Command Startup
 
 ```bash
-cd "/Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph/modular" && python3 -m http.server 8080
+cd "/Users/farieds/lab/islamic-knowledge-graph-deploy" && python3 -m http.server 8080
 ```
 
 Then open: **http://localhost:8080**
@@ -11,19 +11,19 @@ Then open: **http://localhost:8080**
 ## Alternative Ports (if 8080 busy)
 
 ```bash
-cd "/Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph/modular" && python3 -m http.server 8081
+cd "/Users/farieds/lab/islamic-knowledge-graph-deploy" && python3 -m http.server 8081
 ```
 Open: **http://localhost:8081**
 
 ```bash
-cd "/Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph/modular" && python3 -m http.server 9000
+cd "/Users/farieds/lab/islamic-knowledge-graph-deploy" && python3 -m http.server 9000
 ```
 Open: **http://localhost:9000**
 
 ## Option 2: Using VS Code Live Server
 
 1. **Install Live Server extension** in VS Code
-2. **Right-click** on `index.html` in the modular folder
+2. **Right-click** on `index.html` in the project root
 3. **Select** "Open with Live Server"
 
 ## Option 3: Using Node.js serve
@@ -33,9 +33,9 @@ Open: **http://localhost:9000**
    npm install -g serve
    ```
 
-2. **Navigate to modular directory**:
+2. **Navigate to project directory**:
    ```bash
-   cd "/Users/farieds/imam-lib-masha-allah/lab/islamic-knowledge-graph/modular"
+   cd "/Users/farieds/lab/islamic-knowledge-graph-deploy"
    ```
 
 3. **Start server**:
@@ -53,11 +53,11 @@ Open: **http://localhost:9000**
 
 ## 🧪 Test First
 
-Before opening the main application, you can test if modules are working:
+Before opening the main application, you can test if the application is working:
 
 1. **Start server** (using any method above)
-2. **Open**: `http://localhost:8080/test-basic.html`
-3. **Check**: You should see "✅ All basic tests passed!"
+2. **Open**: `http://localhost:8080`
+3. **Check**: You should see the Islamic Knowledge Graph interface load properly
 
 ## 🆘 Troubleshooting
 
@@ -68,8 +68,12 @@ Before opening the main application, you can test if modules are working:
 
 ## 📱 Mobile Testing
 
-The modular version works on mobile too! Once the server is running, you can:
+The Islamic Knowledge Graph works on mobile too! Once the server is running, you can:
 - **Open the same URL on your phone** (if on same network)
 - **Use responsive design mode** in browser dev tools
+
+## 🌐 Live Deployment
+
+This project is also deployed live at: **https://islamic-knowledge-graph.netlify.app**
 
 Happy exploring! 🕌
