@@ -22,11 +22,10 @@ export class TooltipManager {
      * Create a relationship tooltip for link hover
      * @param {Object} linkData - The link data
      * @param {MouseEvent} event - The mouse event
-     * @param {Function} getRelationshipExplanation - Function to get explanation
      * @param {Object} graphData - Graph data for node lookup
      * @returns {string} Tooltip ID
      */
-    createRelationshipTooltip(linkData, event, getRelationshipExplanation, graphData) {
+    createRelationshipTooltip(linkData, event, graphData) {
         // Remove any existing relationship tooltips
         this.removeTooltipsByClass('relationship-tooltip');
         
@@ -39,7 +38,6 @@ export class TooltipManager {
         }
         
         const tooltipId = `relationship-tooltip-${++this.tooltipCounter}`;
-        const relationshipExplanation = getRelationshipExplanation(linkData);
         
         const tooltip = d3.select("body").append("div")
             .attr("class", "relationship-tooltip")
@@ -47,25 +45,14 @@ export class TooltipManager {
             .style("position", "absolute")
             .style("background", "rgba(40, 86, 163, 0.95)")
             .style("color", "white")
-            .style("padding", "12px 16px")
-            .style("border-radius", "8px")
-            .style("font-size", "0.9rem")
-            .style("box-shadow", "0 4px 12px rgba(0,0,0,0.3)")
+            .style("padding", "8px 12px")
+            .style("border-radius", "6px")
+            .style("font-size", "0.85rem")
+            .style("box-shadow", "0 2px 8px rgba(0,0,0,0.3)")
             .style("z-index", "1000")
-            .style("max-width", "300px")
-            .style("line-height", "1.4")
+            .style("white-space", "nowrap")
             .style("pointer-events", "none")
-            .html(`
-                <div style="font-weight: 600; color: #f4c64f; margin-bottom: 8px;">
-                    ${sourceNode.name} → ${targetNode.name}
-                </div>
-                <div style="margin-bottom: 6px;">
-                    <strong>Relationship:</strong> ${linkData.type.replace(/_/g, ' ')}
-                </div>
-                <div style="font-size: 0.85rem; opacity: 0.9;">
-                    ${relationshipExplanation}
-                </div>
-            `)
+            .html(`<strong>${linkData.type}</strong>`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 10) + "px")
             .style("opacity", 0);

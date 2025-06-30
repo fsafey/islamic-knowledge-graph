@@ -10,8 +10,7 @@ import { graphData } from '../data/graph-data.js';
 import { 
     centerNodeInView, 
     centerOnNodeGroup, 
-    getNodeName, 
-    getRelationshipExplanation 
+    getNodeName
 } from '../utils/graph-utils.js';
 // NOTE: updateSidebar and showDefaultSidebar now inlined for performance
 // import { updateSidebar, showDefaultSidebar } from '../ui/sidebar.js';
@@ -593,7 +592,7 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
         .style("cursor", "pointer")
         .on("mouseover", function(event, d) {
             // Use centralized tooltip manager for proper cleanup
-            const tooltipId = tooltipManager.createRelationshipTooltip(d, event, getRelationshipExplanation, graphData);
+            const tooltipId = tooltipManager.createRelationshipTooltip(d, event, graphData);
             
             // Store tooltip ID on the link element for tracking
             d3.select(this).attr('data-tooltip-id', tooltipId);
