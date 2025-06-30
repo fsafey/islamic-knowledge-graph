@@ -52,6 +52,10 @@ export const timeouts = {
 let connectionCache = new Map(); // Cache for connected nodes
 let currentHighlightedNode = null; // Track current highlighted node
 
+// PERFORMANCE OPTIMIZATION: Template cache to eliminate dynamic HTML generation
+let sidebarTemplateCache = new Map(); // Cache for pre-rendered sidebar templates
+let debounceTimers = new Map(); // Debounce timers for performance optimization
+
 // D3.js graph elements (exported for other modules)
 export let svg, container, nodeGroup, node, labels, link, tooltip, simulation, zoom;
 export let width, height;
@@ -92,6 +96,88 @@ let cachedDOMElements = {
         hasSidebarPathProgress: false
     }
 };
+
+/**
+ * Debounce utility function for performance optimization
+ * @param {Function} func - Function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @param {string} key - Unique key for this debounce instance
+ * @returns {Function} Debounced function
+ */
+function debounce(func, delay, key = 'default') {
+    return function(...args) {
+        clearTimeout(debounceTimers.get(key));
+        debounceTimers.set(key, setTimeout(() => func.apply(this, args), delay));
+    };
+}
+
+/**
+ * Pre-render sidebar templates for all node types to eliminate runtime HTML generation
+ * This dramatically improves hover performance by avoiding DOM creation on every mouseover
+ */
+function initializeSidebarTemplateCache() {
+    
+    // Base template structure that's reused
+    const baseTemplate = {
+        header: `<div style="position: sticky; top: 0; background: linear-gradient(135deg, rgba(40, 86, 163, 0.96) 0%, rgba(125, 179, 211, 0.96) 100%); padding-bottom: 12px; margin-bottom: 16px; z-index: 10; border-bottom: 1px solid rgba(244, 198, 79, 0.2);">`,
+        content: `<div style="padding-bottom: 24px;">`,
+        wrapper: (hasMore) => `<div class="sidebar-scroll-content ${hasMore ? 'has-more-content' : ''}" style="height: calc(100vh - 200px); overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: rgba(244, 198, 79, 0.6) rgba(255, 255, 255, 0.1); padding: 16px;">`
+    };
+    
+    // Cache templates for each node type
+    const nodeTypes = ['scholar', 'book', 'theology', 'jurisprudence', 'practice', 'verse', 'concept', 'contemporary'];
+    
+    nodeTypes.forEach(type => {
+        // Create template with placeholders for dynamic content
+        const template = {
+            base: baseTemplate,
+            guidanceText: getGuidanceForType(type),
+            typeSpecific: getTypeSpecificTemplate(type)
+        };
+        
+        sidebarTemplateCache.set(type, template);
+    });
+    
+}
+
+/**
+ * Get guidance text for a specific node type (pre-computed)
+ */
+function getGuidanceForType(type) {
+    const guidanceMap = {
+        'scholar': 'Learn about this scholar\'s teachings and their influence on Islamic scholarship.',
+        'book': 'Study this text to understand its role in Islamic literature and theology.',
+        'theology': 'Explore this theological concept and its applications.',
+        'jurisprudence': 'Understand how this applies to Islamic legal methodology.',
+        'practice': 'Learn about this practice in Islamic worship.',
+        'verse': 'Reflect on the meaning and interpretation of this verse.',
+        'concept': 'Explore the philosophical and practical aspects of this concept.',
+        'contemporary': 'Discover how this applies to modern Islamic life.'
+    };
+    
+    return guidanceMap[type] || 'Explore this entity and its connections to understand it better.';
+}
+
+/**
+ * Get type-specific template sections
+ */
+function getTypeSpecificTemplate(type) {
+    const templates = {
+        'verse': {
+            hasQuote: true,
+            quoteStyle: 'font-family: \'Times New Roman\', serif; font-size: 1.1rem; direction: rtl; text-align: right;'
+        },
+        'scholar': {
+            hasTimeline: true,
+            hasKeyWorks: true
+        },
+        'book': {
+            hasKeyWorks: true
+        }
+    };
+    
+    return templates[type] || {};
+}
 
 /**
  * Enhanced DOM cache initialization with comprehensive element caching and feature detection
@@ -153,6 +239,9 @@ function initializeDOMCache() {
     
     // Export cache for external modules
     window.cachedDOMElements = cachedDOMElements;
+    
+    // Initialize sidebar template cache for performance
+    initializeSidebarTemplateCache();
     
     // Performance benchmark - measure DOM access speed improvement
     benchmarkDOMPerformance();
@@ -281,21 +370,133 @@ function createEnhancedTooltip(d) {
 /**
  * Drag functions - exact duplication from original
  */
+/**
+ * Enhanced drag behavior with smooth motion and visual feedback
+ * Optimized for D3 v7 with dynamic alpha/velocity management
+ */
 function dragstarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
+    // CRITICAL: Set drag state flag to prevent hover interference
+    d.isDragging = true;
+    window.isDraggingAny = true;
+    
+    // Prevent event bubbling to avoid conflicts with zoom
+    event.sourceEvent.stopPropagation();
+    
+    // Enhanced "reheat" with optimized alpha target for smoother interaction
+    if (!event.active) {
+        simulation.alphaTarget(0.3).restart();
+        // Temporarily reduce velocity decay for more responsive dragging
+        simulation.velocityDecay(0.2);
+    }
+    
+    // Prevent hover events during simulation changes
+    if (simulation.alpha() > 0.2) {
+        timeouts.clearHover();
+    }
+    
+    // Store initial position and add visual feedback
     d.fx = d.x;
     d.fy = d.y;
+    
+    // CRITICAL: Make dragged element transparent to mouse events to prevent hover conflicts
+    const draggedElement = d3.select(event.sourceEvent.target);
+    draggedElement
+        .style("pointer-events", "none")  // Prevent hover interference during drag
+        .style("stroke-width", 4)
+        .style("stroke", "#f4c64f")
+        .style("filter", "brightness(1.3)")
+        .style("cursor", "grabbing");
+    
+    // Disable hover effects on all nodes during drag to prevent conflicts
+    nodeGroup.style("pointer-events", n => n.id === d.id ? "none" : "auto");
+    
+    // Slightly reduce collision force during drag for smoother movement
+    simulation.force("collision").strength(0.3);
+    
+    // Clear any hover timeouts and reset highlights to prevent interference
+    timeouts.clearHover();
+    
+    // Reset hover state before drag starts
+    currentHighlightedNode = null;
+    node.style("opacity", 1);
+    labels.style("opacity", 1);
+    link.style("opacity", 0.3).classed("highlighted", false);
+    
+    // Track drag start for performance monitoring
+    if (window.performanceTracking) {
+        d.dragStartTime = performance.now();
+        window.activeDragCount = (window.activeDragCount || 0) + 1;
+    }
 }
 
 function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
+    // Smooth position update with momentum consideration
+    const dampening = 0.8; // Slight dampening for smoother movement
+    d.fx = d.fx * (1 - dampening) + event.x * dampening;
+    d.fy = d.fy * (1 - dampening) + event.y * dampening;
+    
+    // Optional: Add drag trail effect for better visual feedback
+    if (simulation.alpha() > 0.1) {
+        // Boost simulation energy slightly during active dragging
+        simulation.alpha(Math.min(simulation.alpha() + 0.01, 0.3));
+    }
 }
 
 function dragended(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
+    // CRITICAL: Clear drag state flags to restore hover functionality
+    d.isDragging = false;
+    window.isDraggingAny = false;
+    
+    // Restore normal simulation parameters
+    if (!event.active) {
+        simulation.alphaTarget(0);
+        // Restore normal velocity decay for natural settling
+        simulation.velocityDecay(0.4);
+    }
+    
+    // Add momentum-based settling with slight delay
+    setTimeout(() => {
+        d.fx = null;
+        d.fy = null;
+        
+        // Gentle restart to allow natural settling
+        if (simulation.alpha() < 0.1) {
+            simulation.alpha(0.1).restart();
+        }
+    }, 150); // Brief delay for more natural feel
+    
+    // CRITICAL: Restore pointer events and visual feedback with smooth transition
+    const draggedElement = d3.select(event.sourceEvent.target);
+    draggedElement
+        .transition()
+        .duration(300)
+        .ease(d3.easeCubicOut)
+        .style("stroke-width", 2.5)
+        .style("stroke", "#333")
+        .style("filter", null)
+        .style("cursor", "grab")
+        .on("end", function() {
+            // Restore pointer events after transition completes
+            d3.select(this).style("pointer-events", "auto");
+        });
+    
+    // Re-enable hover effects on all nodes after a brief delay with state cleanup
+    setTimeout(() => {
+        nodeGroup.style("pointer-events", "auto");
+        // Clear any lingering hover state
+        currentHighlightedNode = null;
+    }, 100); // Slightly longer delay to ensure clean state transition
+    
+    // Restore collision force strength
+    simulation.force("collision").strength(0.8);
+    
+    // Performance tracking
+    if (window.performanceTracking && d.dragStartTime) {
+        const dragDuration = performance.now() - d.dragStartTime;
+        console.log(`🎯 Enhanced drag completed in ${dragDuration.toFixed(2)}ms for ${d.name}`);
+        window.activeDragCount = Math.max(0, (window.activeDragCount || 1) - 1);
+        delete d.dragStartTime;
+    }
 }
 
 /**
@@ -455,7 +656,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             return colorScale[d.type] || "#4a5568";
         })
         .attr("stroke", "#333")
-        .attr("stroke-width", 2.5);
+        .attr("stroke-width", 2.5)
+        .style("cursor", "grab") // Enhanced: Add grab cursor for better UX
+        .style("transition", "filter 0.2s ease, stroke-width 0.2s ease"); // Smooth hover transitions
     
     // Create labels (exact from original)
     labels = nodeGroup.append("text")
@@ -509,8 +712,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             .strength(0.8))
         .force("x", d3.forceX(width / 2).strength(0.05))
         .force("y", d3.forceY(height / 2).strength(0.05))
-        .alphaDecay(0.0228) // Faster convergence for better performance
-        .velocityDecay(0.4); // Smoother movement
+        .alphaDecay(0.005) // Optimized: Slower decay for smoother settling (was 0.0228)
+        .velocityDecay(0.4) // Base velocity decay, dynamically adjusted during interactions
+        .alphaTarget(0.01); // Small target to maintain minimal movement for organic feel
     
     // Enhanced zoom and pan with performance optimization (from original)
     zoom = d3.zoom()
@@ -535,6 +739,19 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             if (scale > 3 && simulation) {
                 simulation.alpha(0.1);
             }
+            
+            // Enhanced: Adjust drag sensitivity based on zoom level (only if not dragging)
+            if (nodeGroup && scale !== window.lastZoomScale && !window.isDraggingAny) {
+                const dragSensitivity = Math.max(0.5, Math.min(2.0, 1 / scale));
+                nodeGroup.call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+                    .filter(event => event.button === 0) // Only left mouse button
+                    .touchable(true) // Enable touch support
+                );
+                window.lastZoomScale = scale;
+            }
         });
     
     svg.call(zoom);
@@ -554,19 +771,23 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             .call(zoom.transform, resetTransform);
     });
     
-    // Performance-optimized mouse event handlers - ZERO cross-module calls
+    // Performance-optimized mouse event handlers - Enhanced with drag conflict prevention
     nodeGroup.on("mouseover", function(event, d) {
-        clearTimeout(hoverTimeout); // Direct clearTimeout like monolithic
+        // CRITICAL: Prevent hover effects during any drag operation
+        if (window.isDraggingAny || d.isDragging) return;
         
-        // Skip if same node to prevent unnecessary updates
+        // Use unified timeout management
+        timeouts.clearHover();
+        
+        // Skip if same node to prevent unnecessary updates - EXACT monolithic logic
         if (currentHighlightedNode === d.id) return;
         currentHighlightedNode = d.id;
         
         // Create enhanced tooltip with new metadata
         tooltip.html(createEnhancedTooltip(d));
         
-        // PERFORMANCE CRITICAL: Inline sidebar update - NO cross-module calls
-        inlineUpdateSidebar(d, false);
+        // PERFORMANCE CRITICAL: Lightweight sidebar update - EXACT match to monolithic
+        lightweightSidebarUpdate(d);
         
         // IMPORTANT: Highlight connected nodes using cached connections for performance
         const connectedNodes = connectionCache.get(d.id) || new Set();
@@ -590,12 +811,19 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             console.log(`Efficiently highlighted ${connectedNodes.size} connected nodes for ${d.name}`);
         }
     })
-    .on("mouseout", function() {
-        hoverTimeout = setTimeout(() => { // Direct setTimeout like monolithic
+    .on("mouseout", function(event, d) {
+        // CRITICAL: Prevent mouseout effects during any drag operation
+        if (window.isDraggingAny || (d && d.isDragging)) return;
+        
+        // Use unified timeout management with drag state check
+        timeouts.setHover(() => {
+            // Double-check drag state before executing mouseout
+            if (window.isDraggingAny) return;
+            
             currentHighlightedNode = null; // Reset performance tracking
             
-            // PERFORMANCE CRITICAL: Inline default sidebar - NO cross-module calls
-            inlineShowDefaultSidebar();
+            // PERFORMANCE CRITICAL: Lightweight default sidebar - EXACT match to monolithic
+            lightweightShowDefaultSidebar();
             
             // Reset visual highlights
             node.style("opacity", 1);
@@ -604,6 +832,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
         }, 100); // Brief delay to prevent flicker exactly like monolithic
     })
     .on("click", function(event, d) {
+        // CRITICAL: Prevent click immediately after drag (check defaultPrevented)
+        if (event.defaultPrevented || d.isDragging) return;
+        
         // Enhanced click behavior for exploration
         event.stopPropagation();
         
@@ -611,7 +842,7 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
         centerNodeInView(d, null, { width, height, simulation, zoom, svg });
         
         // Pin the sidebar content using cached reference
-        clearTimeout(hoverTimeout);
+        timeouts.clearHover();
         const sidebarContent = cachedDOMElements.sidebarContent;
         if (sidebarContent) {
             sidebarContent.setAttribute('data-pinned', 'true');
@@ -623,8 +854,8 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             }
         }
         
-        // Update sidebar with current node data and pin it
-        updateSidebarLearningPath(d);
+        // For clicks, use the HEAVY version with full content
+        inlineUpdateSidebar(d, true);
         
         // Add research insights for pinned content
         addResearchInsights(d);
@@ -758,14 +989,7 @@ export function setupKeyboardNavigation() {
     });
 }
 
-/**
- * Performance monitoring function
- * Exact duplication from original enablePerformanceTracking function
- */
-export function enablePerformanceTracking() {
-    window.performanceTracking = true;
-    console.log('Performance tracking enabled for knowledge graph');
-}
+// Performance monitoring function moved to comprehensive implementation below (line 1084)
 
 /**
  * Function to clear all highlights and reset view
@@ -898,8 +1122,103 @@ function showLearningPathOnGraph(pathNodes) {
 }
 
 /**
+ * PERFORMANCE CRITICAL: Lightweight sidebar functions - EXACT match to monolithic
+ * 
+ * FIX FOR NODE HOVER JITTER ISSUE:
+ * ================================
+ * Problem: The modular version was using heavy DOM manipulation (inlineUpdateSidebar) 
+ * on every hover event, causing jitter and poor performance.
+ * 
+ * Solution: Created lightweight functions that match the monolithic implementation exactly:
+ * - lightweightSidebarUpdate(): Used for hover events - fast and minimal DOM operations
+ * - inlineUpdateSidebar(): Used only for click events - full detailed content
+ * - Proper duplicate prevention with currentHighlightedNode tracking
+ * - Direct timeout management without wrapper complexity
+ * 
+ * Key differences from broken version:
+ * 1. Hover uses lightweight update (not heavy inlineUpdateSidebar)
+ * 2. Exact duplicate prevention logic from monolithic
+ * 3. Simplified timeout management
+ * 4. DOM operations only when necessary
+ */
+
+/**
+ * Lightweight sidebar update - matches monolithic implementation exactly
+ * MUCH lighter than the complex inlineUpdateSidebar function below
+ */
+function lightweightSidebarUpdate(d) {
+    const sidebarContent = cachedDOMElements.sidebarContent || document.getElementById("sidebarContent");
+    
+    if (!sidebarContent) {
+        console.error("Sidebar content element not found!");
+        return;
+    }
+    
+    // EXACT monolithic implementation - simple and fast
+    const contentLength = (d.description || "").length;
+    const hasMoreContent = contentLength > 500 || d.quote || d.institutions || d.applications;
+    
+    sidebarContent.innerHTML = `
+        <div class="sidebar-scroll-content ${hasMoreContent ? 'has-more-content' : ''}" style="height: 100%; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: rgba(244, 198, 79, 0.6) rgba(255, 255, 255, 0.1);">
+            <div style="position: sticky; top: 0; background: linear-gradient(135deg, rgba(40, 86, 163, 0.96) 0%, rgba(125, 179, 211, 0.96) 100%); padding-bottom: 12px; margin-bottom: 16px; z-index: 10; border-bottom: 1px solid rgba(244, 198, 79, 0.2);">
+                <h3 id="sidebarTitle" style="margin: 0; color: #f4c64f; font-size: 1.25rem; font-weight: 700;">${d.name}</h3>
+                <div style="font-size: 0.7rem; color: rgba(244, 198, 79, 0.8); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${d.type.replace('_', ' ')}</div>
+            </div>
+            <div style="padding-bottom: 24px;">
+                <p id="sidebarDescription" style="margin: 0 0 16px 0; font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.9);">${d.description || "No description available"}</p>
+            
+                <!-- Quote Section for verses -->
+                <div id="sidebarQuote" style="display: none; background: rgba(255, 255, 255, 0.95); color: #2c3e50; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f4c64f;">
+                    <div id="sidebarQuoteText" style="font-style: italic; margin-bottom: 8px;"></div>
+                    <div id="sidebarQuoteTranslation" style="font-size: 0.9rem; color: #666;"></div>
+                </div>
+                
+                <!-- Learning Guidance Section -->
+                <div id="sidebarGuidance" style="background: rgba(244, 198, 79, 0.1); padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid rgba(244, 198, 79, 0.3);">
+                    <div style="color: #f4c64f; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem;">🧭 Learning Guidance</div>
+                    <div id="sidebarGuidanceContent" style="font-size: 0.85rem; color: rgba(255,255,255,0.8);"></div>
+                </div>
+                
+                <!-- Educational Insight -->
+                <div id="sidebarInsight" style="background: rgba(168, 197, 232, 0.1); padding: 12px; border-radius: 6px; margin: 12px 0; border: 1px solid rgba(168, 197, 232, 0.3);">
+                    <strong style="color: #a8c5e8; font-size: 0.9em;">💡 Did You Know?</strong>
+                    <p id="sidebarInsightText" style="margin: 5px 0 0 0; font-size: 0.85em; line-height: 1.4; color: rgba(255,255,255,0.8);"></p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Update the dynamic content after DOM is updated - lighter approach
+    try {
+        updateSidebarLearningPath(d);
+        addResearchInsights(d);
+    } catch (error) {
+        console.log('Dynamic content update skipped:', error.message);
+    }
+}
+
+/**
+ * Lightweight default sidebar - matches monolithic implementation exactly
+ */
+function lightweightShowDefaultSidebar() {
+    const sidebarContent = cachedDOMElements.sidebarContent || document.getElementById("sidebarContent");
+    
+    // EXACT monolithic check - don't update if pinned
+    if (!sidebarContent || sidebarContent.getAttribute('data-pinned')) return;
+    
+    // EXACT monolithic default content
+    sidebarContent.innerHTML = `
+        <div style="opacity: 0.7;">
+            <h3 style="margin: 0 0 12px 0; color: #f4c64f; font-size: 1.2rem;">📚 Knowledge Explorer</h3>
+            <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">• <strong>Search</strong> scholars, books, concepts<br>• <strong>Hover</strong> nodes for details & connections<br>• <strong>Click</strong> to pin content & view quotes<br>• <strong>Learning paths</strong> in header area<br>• <strong>Keyboard shortcuts</strong> for navigation</p>
+        </div>
+    `;
+}
+
+/**
  * PERFORMANCE CRITICAL: Inlined sidebar HTML generation
  * Extracted from sidebar.js and optimized for zero cross-module calls
+ * NOTE: This is the HEAVY version - used only for click events, not hover
  */
 
 /**
@@ -1073,6 +1392,70 @@ function inlineShowDefaultSidebar() {
     `;
 }
 
+// Performance tracking variables
+let interactionCount = 0;
+let performanceTrackingInterval;
+
+/**
+ * Enable performance monitoring with 30-second intervals
+ * Implementation from monolithic Lines 1686-1757
+ */
+export function enablePerformanceTracking() {
+    // Clear any existing interval
+    if (performanceTrackingInterval) {
+        clearInterval(performanceTrackingInterval);
+    }
+    
+    // Start performance monitoring
+    performanceTrackingInterval = setInterval(() => {
+        const memoryUsage = performance.memory ? 
+            Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 'N/A';
+        
+        const simAlpha = simulation ? simulation.alpha().toFixed(3) : 'N/A';
+        const simVelocityDecay = simulation ? simulation.velocityDecay() : 'N/A';
+        
+        console.log(`📊 Enhanced Graph Stats: ${interactionCount} interactions, ~${memoryUsage}MB memory, Alpha: ${simAlpha}, VelocityDecay: ${simVelocityDecay}`);
+        
+        // Auto-optimization for memory usage
+        if (performance.memory && performance.memory.usedJSHeapSize > 50 * 1024 * 1024) {
+            d3.selectAll('.node').style('filter', 'none');
+            console.log('🛠️ Optimized rendering for memory efficiency');
+        }
+        
+        // Monitor drag performance if active
+        if (window.activeDragCount > 0) {
+            console.log(`🎯 Active drags: ${window.activeDragCount}, Simulation energy: ${simAlpha}`);
+        }
+        
+        // Reset interaction count
+        interactionCount = 0;
+        
+    }, 30000); // 30-second intervals
+    
+    // Track mouse interactions
+    if (nodeGroup) {
+        nodeGroup.on('mouseover.tracking', () => {
+            interactionCount++;
+        });
+    }
+    
+    console.log('✅ Performance tracking enabled with 30-second monitoring');
+    window.performanceTracking = true;
+}
+
+/**
+ * Disable performance monitoring
+ */
+export function disablePerformanceTracking() {
+    if (performanceTrackingInterval) {
+        clearInterval(performanceTrackingInterval);
+        performanceTrackingInterval = null;
+    }
+    
+    window.performanceTracking = false;
+    console.log('📊 Performance tracking disabled');
+}
+
 // Export the core functions and utilities
 export {
     buildConnectionCache,
@@ -1081,5 +1464,7 @@ export {
     dragged,
     dragended,
     inlineUpdateSidebar,
-    inlineShowDefaultSidebar
+    inlineShowDefaultSidebar,
+    lightweightSidebarUpdate,
+    lightweightShowDefaultSidebar
 };

@@ -16,6 +16,11 @@ import {
     getDidYouKnowFact 
 } from '../data/learning-paths-data.js';
 
+// Import visual enhancement modules
+import { showLearningPathNotification } from './notifications.js';
+import { animateSidebarUpdate } from './sidebar-animations.js';
+import { createProgressVisualization } from './progress-visualization.js';
+
 // Import algorithm layer  
 import { 
     determineLearningPath, 
@@ -79,11 +84,13 @@ export function selectLearningPath(pathKey) {
         window.currentLearningPath = path.nodes;
         updatePathProgress(pathKey, 0);
         
-        // Provide user feedback
-        console.log(`Selected learning path: ${pathKey}`);
+        // Show enhanced notification
+        showLearningPathNotification(path.name || path.title || pathKey, 'selected');
         
-        // Optional: Show a brief notification
-        showLearningPathSelection(path.title || pathKey);
+        // Create progress visualization
+        const progressViz = createProgressVisualization(path.nodes, 0, path);
+        
+        console.log(`Selected learning path: ${pathKey}`);
     }
 }
 
@@ -567,4 +574,119 @@ export function showLearningPathOnGraph(pathNodes) {
             return 0.1; // Other connections dimmed
         }
     });
+}
+
+/**
+ * Add research insights function from monolithic Lines 3458-3489
+ * Provides quantified impact metrics and evidence-based content
+ */
+export function addResearchInsights(nodeData) {
+    const researchInsights = {
+        'imam_ali': "As the pinnacle of Islamic scholarship and governance, Imam Ali's influence spans 14 centuries. His teachings on justice and governance continue to influence contemporary Islamic political thought, with over 15,000 scholarly citations making him the most referenced figure after Prophet Muhammad.",
+        
+        'sistani': "At 94 years old, Grand Ayatollah Sistani represents the global authority for 21 million Shia Muslims worldwide. His fatwa supporting democratic elections in Iraq (2004) and call for resistance against ISIS (2014) demonstrate how traditional religious authority shapes contemporary political realities.",
+        
+        'imam_sadiq': "Imam Ja'far al-Sadiq taught over 4,000 students, including founders of major Sunni legal schools. His methodology established the intellectual rigor that continues in today's seminary education, influencing 1,000 years of Islamic scholarship development.",
+        
+        'sheikh_tusi': "Sheikh al-Tusi established the Najaf Seminary in 1067 CE, which continues today with over 13,000 current students from 170 countries. This institution has trained Islamic scholars for over 1,000 years, making it one of the world's oldest continuous educational institutions.",
+        
+        'al_kulayni': "Al-Kulayni spent 20 years compiling Al-Kafi with 16,199 authenticated narrations. This systematic preservation of Islamic traditions during the Minor Occultation period established the foundational text for Shia jurisprudence, still used in seminary curricula today.",
+        
+        'al_kafi': "As one of the 'Four Books' of Shia Islam, Al-Kafi contains 16,199 systematically organized narrations. Its influence spans over 1,000 years of Islamic education, serving as the primary source for contemporary Shia legal rulings worldwide.",
+        
+        'nahj_balagha': "Nahj al-Balagha contains 239 sermons, 79 letters, and 489 short sayings, making it the most cited work after the Quran in Islamic literature. Its influence on Arabic rhetoric and Islamic political philosophy continues in modern governance studies.",
+        
+        'najaf_seminary': "Founded in 1067 CE, Najaf Seminary currently educates 13,000 students from 170 countries. This 1,000-year-old institution bridges classical Islamic scholarship with contemporary religious guidance, maintaining continuous scholarly tradition.",
+        
+        'marjaiyyah': "The Marjaiyyah system provides contemporary guidance to over 200 million Shia Muslims globally through recognized religious authorities. This institution demonstrates how traditional Islamic scholarship adapts to modern challenges while maintaining authentic religious guidance.",
+        
+        'ijtihad': "Contemporary Ijtihad enables Islamic law adaptation to 21st-century challenges, addressing issues from biomedical ethics to artificial intelligence. This methodology allows 200+ million Shia Muslims to receive authentic religious guidance for modern circumstances."
+    };
+    
+    const insight = researchInsights[nodeData.id];
+    
+    if (insight) {
+        // Find or create research insights section in sidebar
+        const sidebarContent = document.getElementById('sidebarContent');
+        if (sidebarContent) {
+            // Add research insights section
+            const insightSection = document.createElement('div');
+            insightSection.style.cssText = `
+                background: rgba(34, 197, 94, 0.1);
+                padding: 16px;
+                border-radius: 8px;
+                margin: 16px 0;
+                border: 1px solid rgba(34, 197, 94, 0.3);
+            `;
+            insightSection.innerHTML = `
+                <div style="color: #22c55e; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem;">🔬 Research Insights</div>
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.9); line-height: 1.4;">${insight}</div>
+            `;
+            
+            sidebarContent.appendChild(insightSection);
+        }
+    }
+    
+    console.log('Research insights added for:', nodeData.name);
+}
+
+/**
+ * Update sidebar learning path function from monolithic Lines 3193-3335
+ * Comprehensive sidebar context updates with learning path integration
+ */
+export function updateSidebarLearningPath(nodeData) {
+    const sidebarContent = document.getElementById('sidebarContent');
+    if (!sidebarContent) return;
+    
+    // Check if we have an active learning path
+    const pathInfo = window.currentLearningPathInfo;
+    const pathNodes = window.currentLearningPath;
+    
+    if (pathInfo && pathNodes) {
+        const currentIndex = pathNodes.indexOf(nodeData.id);
+        const isInPath = currentIndex !== -1;
+        
+        // Create learning path context section
+        const pathSection = document.createElement('div');
+        pathSection.style.cssText = `
+            background: rgba(40, 86, 163, 0.1);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid rgba(40, 86, 163, 0.3);
+        `;
+        
+        if (isInPath) {
+            const stepNumber = currentIndex + 1;
+            const totalSteps = pathNodes.length;
+            const progress = Math.round((stepNumber / totalSteps) * 100);
+            
+            pathSection.innerHTML = `
+                <div style="color: #7db3d3; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">
+                    📚 Learning Path: ${pathInfo.name}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <div style="background: rgba(244, 198, 79, 0.2); color: #f4c64f; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block;">
+                        Step ${stepNumber} of ${totalSteps} (${progress}%)
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                    You're following the "${pathInfo.persona}" learning journey focused on "${pathInfo.useCase}".
+                </div>
+            `;
+        } else {
+            pathSection.innerHTML = `
+                <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">
+                    📍 Off Your Learning Path
+                </div>
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
+                    This concept isn't part of your "${pathInfo.name}" journey. Consider returning to your path for focused learning.
+                </div>
+            `;
+        }
+        
+        sidebarContent.appendChild(pathSection);
+    }
+    
+    console.log('Learning path context updated for:', nodeData.name);
 }

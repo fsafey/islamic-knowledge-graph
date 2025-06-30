@@ -15,7 +15,15 @@ import {
 } from './core/graph-core.js';
 import { initializeSearch } from './ui/search.js';
 import { loadSavedProgress, initializeLearningPathEvents } from './ui/learning-paths.js';
-import { toggleMobileSidebar } from './ui/sidebar.js';
+import { initializeMobile } from './ui/mobile.js';
+
+// Import advanced visual enhancement modules
+import { initializeNotificationSystem, createAdvancedNotification } from './ui/notifications.js';
+import { initializeVisualEffects } from './ui/visual-effects.js';
+import { initializeConnectionVisualization } from './ui/connection-visualization.js';
+import { initializeEnhancedModal, showEnhancedModal } from './ui/enhanced-modal.js';
+import { initializeSidebarAnimations } from './ui/sidebar-animations.js';
+import { initializeProgressVisualization } from './ui/progress-visualization.js';
 
 /**
  * Initialize the entire application
@@ -83,7 +91,27 @@ export function initializeApp() {
         console.log('Initializing learning path event delegation...');
         initializeLearningPathEvents();
         
-        console.log('✅ Islamic Knowledge Graph initialized successfully!');
+        // 9. Initialize mobile functionality
+        console.log('Initializing mobile functionality...');
+        initializeMobile();
+        
+        // 10. Initialize advanced visual enhancements
+        console.log('Initializing advanced visual enhancements...');
+        initializeNotificationSystem();
+        initializeVisualEffects();
+        initializeConnectionVisualization();
+        initializeEnhancedModal();
+        initializeSidebarAnimations();
+        initializeProgressVisualization();
+        
+        // Show startup notification
+        createAdvancedNotification('Islamic Knowledge Graph initialized successfully!', 'success', {
+            subtitle: `Loaded ${graphData.nodes.length} nodes and ${graphData.links.length} connections`,
+            duration: 3000,
+            position: 'top-center'
+        });
+        
+        console.log('✅ Islamic Knowledge Graph with advanced visual enhancements initialized successfully!');
         console.log(`📊 Loaded ${graphData.nodes.length} nodes and ${graphData.links.length} connections`);
         
     } catch (error) {
@@ -188,3 +216,6 @@ if (document.readyState === 'loading') {
 
 // Export for external access if needed
 export { resetView };
+
+// Make enhanced modal available globally for easy access
+window.showEnhancedLearningModal = showEnhancedModal;

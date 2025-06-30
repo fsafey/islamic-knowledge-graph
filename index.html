@@ -64,6 +64,18 @@
                     <button class="user-type-tab" data-type="scholar">
                         🔍 Scholar
                     </button>
+                    <button class="user-type-tab" data-type="professional">
+                        💼 Professionals
+                    </button>
+                    <button class="user-type-tab" data-type="spiritual">
+                        🕊️ Spiritual Seekers
+                    </button>
+                    <button class="user-type-tab" data-type="parent">
+                        👨‍👩‍👧‍👦 Parents
+                    </button>
+                    <button class="user-type-tab" data-type="young_adult">
+                        🚀 Young Adults
+                    </button>
                 </div>
                 
                 <!-- Learning Path Content Areas -->
@@ -174,6 +186,102 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Professional Paths -->
+                    <div id="professional-paths" class="user-type-content">
+                        <div class="learning-path-section-header professional">
+                            <h3>💼 Professional Ethics</h3>
+                            <p>
+                                Apply Islamic principles in professional settings. Navigate ethical challenges in modern careers with religious guidance.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card professional-ethics" data-learning-path="professional_ethics_path">
+                                <h3>⚖️ Islamic Professional Ethics</h3>
+                                <p>
+                                    Learn how Islamic principles create ethical alternatives in banking, healthcare, environmental stewardship, and workplace decisions.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>🏢 Career Focus:</strong>
+                                    <span>"Islamic Banking" → "Medical Ethics" → "Environmental Ethics" → "Contemporary Applications"</span>
+                                </div>
+                                <div class="learning-path-card-footer">💡 Practical guidance for professional ethical challenges</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Spiritual Seekers Paths -->
+                    <div id="spiritual-paths" class="user-type-content">
+                        <div class="learning-path-section-header spiritual">
+                            <h3>🕊️ Deepening Spiritual Connection</h3>
+                            <p>
+                                Develop a deeper spiritual relationship through Islamic practices. Journey from purification to pilgrimage.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card spiritual-journey" data-learning-path="spiritual_seeker_path">
+                                <h3>🌙 Spiritual Development Path</h3>
+                                <p>
+                                    Progress through the stages of spiritual purification, from physical cleanliness to the ultimate journey of Hajj.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>🤲 Spiritual Journey:</strong>
+                                    <span>"Wudu" → "Salah" → "Du'a" → "Mourning" → "Hajj"</span>
+                                </div>
+                                <div class="learning-path-card-footer">✨ Enhancing personal spirituality and connection with Allah</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Parent Paths -->
+                    <div id="parent-paths" class="user-type-content">
+                        <div class="learning-path-section-header parent">
+                            <h3>👨‍👩‍👧‍👦 Parenting with Islamic Values</h3>
+                            <p>
+                                Learn from Imam Ali's wisdom on leadership and character. Discover how to instill Islamic values in family life.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card family-guidance" data-learning-path="parent_family_guidance">
+                                <h3>👪 Family Values & Character Building</h3>
+                                <p>
+                                    Study the perfect father and leader's guidance on raising children with strong Islamic character and moral education.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>👶 Family Focus:</strong>
+                                    <span>"Imam Ali" → "Nahj al-Balagha" → "Salah" → "Moral Education"</span>
+                                </div>
+                                <div class="learning-path-card-footer">🎯 Raising children with strong Islamic character and values</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Young Adult Paths -->
+                    <div id="young_adult-paths" class="user-type-content">
+                        <div class="learning-path-section-header young-adult">
+                            <h3>🚀 Modern Challenges for Young Adults</h3>
+                            <p>
+                                Navigate modern challenges while staying true to Islamic values. Explore how traditional principles guide contemporary decisions.
+                            </p>
+                        </div>
+                        
+                        <div class="learning-path-cards-grid">
+                            <div class="learning-path-card modern-challenges" data-learning-path="young_adult_engagement">
+                                <h3>🌐 Contemporary Islamic Living</h3>
+                                <p>
+                                    Connect traditional Islamic values with modern challenges including social media ethics, career guidance, and interfaith dialogue.
+                                </p>
+                                <div class="learning-path-info-box">
+                                    <strong>🔗 Modern Applications:</strong>
+                                    <span>"Contemporary Ijtihad" → "Medical Ethics" → "Environmental Ethics" → "Interfaith Dialogue"</span>
+                                </div>
+                                <div class="learning-path-card-footer">🌟 Applying Islamic principles to modern dilemmas and social issues</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -251,6 +359,9 @@
         
         <!-- Graph Layout with Dedicated Panel Space -->
         <div class="graph-layout">
+            <!-- Mobile Sidebar Toggle -->
+            <button class="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle sidebar">📚</button>
+            
             <!-- Left Panel - Dedicated Space -->
             <div id="graphSidebar" class="graph-sidebar">
                 <!-- Spacer to avoid search bar overlap -->

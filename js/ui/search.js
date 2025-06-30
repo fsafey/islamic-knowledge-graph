@@ -7,9 +7,13 @@ import { graphData } from '../data/graph-data.js';
 import { width, height, zoom, simulation, timeouts, svg } from '../core/graph-core.js';
 import { centerNodeInView, centerOnNodeGroup } from '../utils/graph-utils.js';
 import { DOMManager } from './dom-manager.js';
+import { showSearchNotification } from './notifications.js';
 
 // DOM elements - will be cached for performance
 let searchInput, searchSuggestions;
+
+// Keyboard navigation state
+let selectedSuggestion = -1;
 
 // Common search terms and synonyms for better matching (from original)
 const searchSynonyms = {
@@ -156,6 +160,26 @@ function batchResetUpdate() {
 }
 
 /**
+ * Update suggestion selection visual feedback with ARIA attributes
+ * Implementation from monolithic Lines 2119-2155
+ */
+function updateSuggestionSelection(suggestions) {
+    suggestions.forEach((item, index) => {
+        if (index === selectedSuggestion) {
+            item.style.backgroundColor = '#eff6ff';
+            item.style.borderLeft = '4px solid #2856A3';
+            item.style.transform = 'translateX(2px)';
+            item.setAttribute('aria-selected', 'true');
+        } else {
+            item.style.backgroundColor = 'white';
+            item.style.borderLeft = 'none';
+            item.style.transform = 'translateX(0)';
+            item.setAttribute('aria-selected', 'false');
+        }
+    });
+}
+
+/**
  * Initialize search functionality with cached DOM elements and graceful degradation
  */
 export function initializeSearch() {
@@ -177,6 +201,27 @@ export function initializeSearch() {
         return;
     }
     
+    // Add keyboard navigation for suggestions
+    searchInput.addEventListener("keydown", function(e) {
+        const suggestions = searchSuggestions.querySelectorAll('.suggestion-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedSuggestion = Math.min(selectedSuggestion + 1, suggestions.length - 1);
+            updateSuggestionSelection(suggestions);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedSuggestion = Math.max(selectedSuggestion - 1, -1);
+            updateSuggestionSelection(suggestions);
+        } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+            e.preventDefault();
+            suggestions[selectedSuggestion].click();
+        } else if (e.key === 'Escape') {
+            searchSuggestions.style.display = 'none';
+            selectedSuggestion = -1;
+        }
+    });
+
     // Input event listener (exact from original)
     searchInput.addEventListener("input", function(e) {
         timeouts.setSearch(() => {
@@ -217,6 +262,9 @@ export function initializeSearch() {
                 
                 // Batch DOM update for optimal performance - minimize reflows
                 batchHighlightUpdate(matchingIds, connectedIds);
+                
+                // Show search notification
+                showSearchNotification(searchTerm, matchingNodes.length);
                 
                 // Intelligent navigation for search results
                 if (matchingNodes.length === 1) {
