@@ -157,77 +157,7 @@ export function generateLearningGuidance(nodeData) {
     return guidanceMap[nodeData.type] || `Explore the connections and significance of ${nodeData.name} in Islamic scholarship.`;
 }
 
-/**
- * Get comprehensive relationship explanations for tooltips
- * @param {Object} link - The link object containing relationship information
- * @returns {string} Human-readable explanation of the relationship
- * @example
- * const explanation = getRelationshipExplanation({ type: 'authored' });
- */
-export function getRelationshipExplanation(link) {
-    const relationshipTypes = {
-        // Classical scholarly relationships
-        "authored": "This scholar wrote or composed this work, representing their intellectual contribution to Islamic scholarship.",
-        "compiled": "This scholar systematically gathered and organized existing materials into this comprehensive collection.",
-        "taught": "Direct teacher-student relationship showing the transmission of Islamic knowledge across generations.",
-        "interpreted": "This scholar provided commentary or interpretation, adding depth and understanding to the original text.",
-        "analyzed": "Scholarly analysis and examination, contributing to deeper understanding of the source material.",
-        "established": "Foundational contribution that created or formalized this concept in Islamic scholarship.",
-        "developed": "Significant advancement or expansion of this concept through scholarly work and reasoning.",
-        
-        // Theological and conceptual relationships
-        "exemplified": "This figure perfectly embodied or demonstrated this principle in their life and teachings.",
-        "requires": "This concept is an essential prerequisite or necessary component of the other.",
-        "implies": "This principle logically leads to or necessitates the understanding of the connected concept.",
-        "necessitates": "The existence or truth of this concept makes the other absolutely necessary.",
-        "manifests": "This concept is actively expressed or realized through the connected element.",
-        "undergoes": "This figure or concept is characterized by experiencing this state or condition.",
-        "applies_in": "This principle finds practical application or implementation in the connected context.",
-        "provides_framework_for": "This methodological foundation structures and guides the connected field.",
-        
-        // Contemporary applications and connections
-        "applies_to": "Traditional Islamic principles are actively used to address this modern challenge or field.",
-        "enables": "This foundational concept makes possible or facilitates the contemporary application.",
-        "practiced_by": "This modern authority or institution actively implements this traditional methodology.",
-        "leads": "Leadership or guidance relationship showing institutional authority and direction.",
-        "institutionalized_in": "This concept has been formally organized and preserved within this institution.",
-        "participates_in": "Active engagement in this contemporary activity or movement.",
-        "inspires": "This traditional principle provides motivation and guidance for modern initiatives.",
-        "implements": "Practical application of traditional concepts in contemporary financial or social systems.",
-        "traces_to": "This modern development has its historical roots in this classical foundation.",
-        "rooted_in": "This contemporary application draws its fundamental principles from this traditional source.",
-        "exemplified_by": "This figure serves as a model or demonstration of this principle in practice.",
-        "preserves": "This institution maintains and transmits this knowledge for future generations.",
-        
-        // Enhanced theological relationship types
-        "foundational_principle_to": "This serves as a foundational theological principle that logically leads to the connected concept.",
-        "requires_for_validation": "This concept requires the connected element for its theological validation and coherence.",
-        "continues_through": "This principle continues and develops through the connected concept or institution.",
-        "ensures_accountability_in": "This concept ensures proper accountability and preparation for the connected element.",
-        "manifests_as": "This theological principle manifests itself practically as the connected concept.",
-        "contemporary_expression_through": "This classical concept finds its contemporary expression through the connected modern institution.",
-        "implemented_via": "This principle is practically implemented through the connected systematic approach.",
-        "validates_authority_of": "This doctrine validates and legitimizes the religious authority of the connected element.",
-        "transferred_to": "This quality or characteristic is conceptually transferred to the connected element.",
-        "includes_intermediate_stage": "This eschatological concept includes the connected element as an intermediate stage.",
-        "setting_for": "This realm or concept provides the spiritual setting where the connected activity occurs.",
-        "scriptural_foundation_for": "This scriptural passage provides the foundational basis for the connected theological concept.",
-        "prophetic_establishment_of": "This historical event represents the prophetic establishment of the connected principle.",
-        "scriptural_basis_for": "This verse or text provides the scriptural foundation for the connected doctrine.",
-        
-        // Enhanced contemporary connections
-        "foundational_for": "This classical concept provides the essential foundation for this modern development.",
-        "methodological_precedent": "This historical approach established the methodology used in contemporary practice.",
-        "intellectual_foundation": "The intellectual framework established here supports modern institutional development.",
-        "scholarly_tradition": "This tradition of learning continues to influence contemporary scholarship.",
-        "empowers": "This concept provides authority and capability for the connected modern practice.",
-        
-        // Default explanation
-        "default": "This relationship demonstrates the interconnected nature of Islamic scholarship and practice."
-    };
-    
-    return relationshipTypes[link.type] || relationshipTypes["default"];
-}
+// Removed getRelationshipExplanation function - tooltips now use simplified relationship types
 
 /**
  * Highlight node and programmatically show information

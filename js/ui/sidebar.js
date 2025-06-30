@@ -7,7 +7,7 @@
 import { graphData } from '../data/graph-data.js';
 import { determineLearningPath } from './learning-paths.js';
 // Note: timeout management handled directly in graph-core.js
-import { getNodeName, getRelationshipExplanation, generateLearningGuidance } from '../utils/graph-utils.js';
+import { getNodeName, generateLearningGuidance } from '../utils/graph-utils.js';
 import { DOMManager } from './dom-manager.js';
 
 let sidebarPinned = false;
@@ -346,7 +346,7 @@ export function updateSidebarLearningPath(nodeData) {
     window.currentLearningPathKey = pathInfo.pathKey;
 }
 
-// Note: getRelationshipExplanation now imported from utils/graph-utils.js
+// Note: Relationship explanations removed - using simplified edge tooltips
 
 /**
  * Add research insights and contextual data to enhance panel information

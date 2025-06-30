@@ -5,7 +5,7 @@
  */
 
 import { graphData } from '../data/graph-data.js';
-import { getRelationshipExplanation } from '../utils/graph-utils.js';
+// Removed getRelationshipExplanation import - using simplified tooltips
 
 // Connection visualization state
 let connectionCache = new Map();

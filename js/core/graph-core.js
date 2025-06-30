@@ -313,11 +313,7 @@ function buildConnectionCache() {
     });
 }
 
-/**
- * Function to get relationship explanation for link tooltips
- * Exact duplication from original getRelationshipExplanation function
- */
-// Note: getRelationshipExplanation now imported from utils/graph-utils.js
+// Note: Relationship explanations removed - tooltips now show simplified types only
 
 /**
  * Enhanced tooltip function to display new theological metadata
