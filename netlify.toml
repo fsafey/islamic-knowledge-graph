@@ -2,12 +2,6 @@
   # No build process needed - static ES6 modules
   publish = "."
   
-# Redirect root to kg-demo.html
-[[redirects]]
-  from = "/"
-  to = "/kg-demo.html"
-  status = 200
-
 [build.environment]
   NODE_VERSION = "18"
 
@@ -59,16 +53,22 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000"
 
-# Redirect rules
+# Redirect rules - order matters, put specific redirects first
 [[redirects]]
   from = "/graph"
-  to = "/"
+  to = "/kg-demo.html"
   status = 301
 
 [[redirects]]
   from = "/knowledge-graph"
-  to = "/"
+  to = "/kg-demo.html"
   status = 301
+
+# Main redirect - root to kg-demo.html (must be last)
+[[redirects]]
+  from = "/"
+  to = "/kg-demo.html"
+  status = 200
 
 # CSP for enhanced security (ES6 modules compatible)
 [[headers]]
