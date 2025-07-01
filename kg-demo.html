@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Islamic Scholarship - Interactive Knowledge Graph</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 24px; /* 8px grid: 3 units */
+            background: linear-gradient(135deg, #f7f3ef 0%, #faf7f2 25%, #f4f1ec 50%, #f7f3ef 100%);
+            min-height: 100vh;
+            color: #2c3e50;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(125, 179, 211, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(244, 198, 79, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(212, 165, 116, 0.05) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 1440px; /* Optimized for modern screens */
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px; /* 8px grid: 3 units */
+            box-shadow: 0 16px 40px rgba(40, 86, 163, 0.12);
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+            border: 1px solid rgba(244, 198, 79, 0.25);
+        }
+        
+        .branding-bar {
+            background: linear-gradient(135deg, #f7f3ef 0%, #faf7f2 100%);
+            border-bottom: 4px solid #2856A3; /* Stronger visual anchor */
+            padding: 24px 32px; /* 8px grid: 3x4 and 4x8 */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .branding-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(40, 86, 163, 0.02) 20px,
+                rgba(40, 86, 163, 0.02) 40px
+            );
+            z-index: 1;
+        }
+        
+        .library-branding {
+            display: flex;
+            align-items: center;
+            gap: 24px; /* 8px grid: 3 units */
+            max-width: 1440px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .library-logo {
+            height: 64px; /* 8px grid: 8 units */
+            width: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(40, 86, 163, 0.25);
+            border: 2px solid rgba(244, 198, 79, 0.4);
+            transition: transform 0.2s ease;
+        }
+        
+        .library-logo:hover {
+            transform: scale(1.02);
+        }
+        
+        .library-title {
+            font-family: 'Georgia', serif;
+            font-size: 2.25rem; /* Consistent rem units */
+            font-weight: 600; /* Stronger hierarchy */
+            color: #2856A3;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(40, 86, 163, 0.15);
+            letter-spacing: -0.02em; /* Improved readability */
+            line-height: 1.2;
+        }
+        
+        .library-subtitle {
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            color: #d4a574;
+            margin: 4px 0 0 0; /* 8px grid: 0.5 units */
+            font-style: italic;
+            opacity: 0.85;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2856A3 0%, #7db3d3 100%);
+            color: white;
+            padding: 48px 32px; /* 8px grid: 6x4 and 4x8 */
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 70%, rgba(244, 198, 79, 0.1) 0%, transparent 60%);
+            z-index: 1;
+        }
+        
+        
+        .header h1 {
+            margin: 0 0 16px 0; /* 8px grid: 2 units */
+            font-size: 2.5rem; /* Enhanced prominence */
+            font-weight: 500;
+            color: #f4c64f;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            letter-spacing: -0.01em;
+            line-height: 1.1;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header p {
+            margin: 0;
+            opacity: 0.92;
+            font-size: 1.125rem;
+            color: #f7f3ef;
+            font-weight: 400;
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+        
+        .controls {
+            padding: 32px; /* 8px grid: 4 units */
+            background: linear-gradient(135deg, #faf7f2 0%, #f7f3ef 100%);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(212, 165, 116, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px; /* 8px grid: 3 units */
+            box-shadow: inset 0 -3px 6px rgba(244, 198, 79, 0.12);
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        
+        
+        #graph {
+            background: #f7f3ef;
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(125, 179, 211, 0.2);
+            position: relative;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .node {
+            cursor: pointer;
+            stroke-width: 2.5;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .node:hover {
+            stroke-width: 4;
+            filter: brightness(1.15) drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            transform: scale(1.05);
+        }
+        
+        .link {
+            stroke: #7f8c8d;
+            stroke-opacity: 0.3;
+            stroke-width: 1.8;
+            transition: all 0.3s ease;
+        }
+        
+        .link.highlighted {
+            stroke-opacity: 0.9;
+            stroke-width: 3.5;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+        }
+        
+        .node-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            fill: #2c2c2c;
+            text-shadow: 0 0 4px white, 0 0 4px white, 0 1px 2px rgba(0,0,0,0.1);
+            font-family: 'Georgia', serif;
+        }
+        
+        .instructions {
+            padding: 24px 32px; /* 8px grid: 3x4 and 4x8 */
+            background: linear-gradient(135deg, rgba(125, 179, 211, 0.08) 0%, rgba(244, 198, 79, 0.08) 100%);
+            color: #2856A3;
+            text-align: center;
+            font-style: italic;
+            font-weight: 500;
+            border-top: 3px solid rgba(125, 179, 211, 0.25);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .search-bar {
+            padding: 12px 20px;
+            border: 2px solid #7db3d3;
+            border-radius: 25px;
+            font-size: 14px;
+            width: 280px;
+            outline: none;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 8px rgba(125, 179, 211, 0.2);
+        }
+        
+        #searchInput:focus {
+            border-color: #f4c64f !important;
+            box-shadow: 0 0 16px rgba(244, 198, 79, 0.45), 0 6px 20px rgba(125, 179, 211, 0.35) !important;
+            transform: translateY(-2px);
+            background: #fefefe !important;
+        }
+        
+        .search-bar::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .suggestion-item:hover {
+            background: #f8f9fa !important;
+            border-left: 3px solid #2e8b57 !important;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .loading-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .container {
+                border-radius: 16px;
+            }
+            
+            .search-bar {
+                width: 240px;
+                font-size: 14px;
+                padding: 12px 18px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 24px;
+                align-items: stretch;
+                padding: 24px;
+            }
+            
+            .legend {
+                justify-content: center;
+                gap: 16px;
+            }
+            
+            .legend-item {
+                font-size: 0.8rem;
+            }
+            
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .branding-bar {
+                padding: 20px 24px;
+            }
+            
+            .library-branding {
+                gap: 20px;
+            }
+            
+            .library-title {
+                font-size: 1.875rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            
+            .container {
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 32px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.75rem;
+                margin-bottom: 12px;
+            }
+            
+            .header p {
+                font-size: 0.95rem;
+            }
+            
+            .controls {
+                padding: 20px;
+            }
+            
+            .branding-bar {
+                padding: 16px 20px;
+            }
+            
+            .library-title {
+                font-size: 1.625rem;
+            }
+            
+            .library-subtitle {
+                font-size: 0.85rem;
+            }
+            
+            .legend {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .search-bar {
+                width: 100%;
+                max-width: 280px;
+                font-size: 14px;
+            }
+            
+        }
+        
+        /* Enhanced accessibility and contrast */
+        :focus-visible {
+            outline: 3px solid #f4c64f;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        
+        .legend-item:hover {
+            background: rgba(40, 86, 163, 0.05);
+            border-radius: 6px;
+            padding: 4px 8px;
+            margin: -4px -8px;
+            transition: all 0.2s ease;
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .node {
+                stroke-width: 4px;
+                stroke: #000 !important;
+            }
+            
+            .link {
+                stroke: #222 !important;
+                stroke-width: 3px;
+            }
+            
+            .node-label {
+                text-shadow: 0 0 8px white, 0 0 8px white, 0 0 8px white;
+                font-weight: 800;
+                font-size: 12px !important;
+            }
+            
+            .container {
+                border: 3px solid #2856A3;
+            }
+            
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Custom Scrollbar Styles for Sidebar */
+        #sidebarContent::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #sidebarContent::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        #sidebarContent::-webkit-scrollbar-thumb {
+            background: rgba(244, 198, 79, 0.6);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        
+        #sidebarContent::-webkit-scrollbar-thumb:hover {
+            background: rgba(244, 198, 79, 0.8);
+        }
+        
+        /* Ensure sidebar content flows naturally when scrollable */
+        #sidebarContent {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(244, 198, 79, 0.6) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Learning Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(40, 86, 163, 0.3);
+            border: 1px solid rgba(244, 198, 79, 0.2);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #2856A3;
+            z-index: 2001;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background: rgba(40, 86, 163, 0.1);
+            transform: scale(1.1);
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Enhanced Branding Bar -->
+        <div class="branding-bar">
+            <div class="library-branding">
+                <img src="imam-logo.jpg" alt="IMAM - Imam Mahdi Association of Marjaeya" class="library-logo">
+                <div>
+                    <h1 class="library-title">IMAM Knowledge Graph</h1>
+                    <p class="library-subtitle">Islamic Scholarship & Contemporary Issues Visualization</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Header -->
+        <div class="header">
+            <h1>Interactive Islamic Scholarship Explorer</h1>
+            <p>Explore connections that traditional search cannot reveal - trace how Islamic scholars, texts, and concepts interconnect across 14 centuries of scholarship.</p>
+        </div>
+        
+        <!-- Quick Start Trigger -->
+        <div style="text-align: center; margin: 24px 0; padding: 20px; background: rgba(40, 86, 163, 0.05); border-radius: 12px; border: 1px solid rgba(40, 86, 163, 0.1);">
+            <p style="margin: 0; font-size: 1.1rem; color: #2856A3; font-weight: 500;">
+                New to the knowledge graph? <a href="#" onclick="openLearningModal(); return false;" style="color: #f4c64f; text-decoration: underline; cursor: pointer; font-weight: 600;">Find your learning path →</a>
+            </p>
+        </div>
+        
+        
+        
+        
+        <div style="position: relative;">
+            <!-- Strategic Graph Overlay System -->
+            
+            
+            <!-- 2. Legend - Top Left -->
+            <div style="position: absolute; top: 24px; left: 24px; z-index: 100; pointer-events: none;">
+                <div style="background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px); padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(40, 86, 163, 0.18); border: 1px solid rgba(244, 198, 79, 0.3); pointer-events: auto;">
+                    <div style="font-weight: 700; color: #2856A3; margin-bottom: 16px; font-size: 1rem; letter-spacing: -0.01em;">Node Types</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 16px; max-width: 320px;">
+                        <div class="legend-item" title="Religious authorities and spiritual leaders" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #2856A3; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Scholars</span>
+                        </div>
+                        <div class="legend-item" title="Sacred texts, books, and written works" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #7db3d3; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Books</span>
+                        </div>
+                        <div class="legend-item" title="Legal principles and methodologies" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #f4c64f; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Law</span>
+                        </div>
+                        <div class="legend-item" title="Core beliefs and theological principles" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #d4a574; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Theology</span>
+                        </div>
+                        <div class="legend-item" title="Worship practices and rituals" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #5a9b97; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Practice</span>
+                        </div>
+                        <div class="legend-item" title="Quranic verses and important sayings" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #e6b566; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Verses</span>
+                        </div>
+                        <div class="legend-item" title="Advanced concepts and philosophical ideas" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #4a5568; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Concepts</span>
+                        </div>
+                        <div class="legend-item" title="Contemporary organizations, issues, and programs" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #8e44ad; border: 2px solid #333; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                            <span style="color: #333;">Contemporary</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Integrated Search Section -->
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(125, 179, 211, 0.3);">
+                        <div style="position: relative;">
+                            <input type="text" style="padding: 12px 20px; border: 2px solid #7db3d3; border-radius: 25px; font-size: 14px; width: 100%; outline: none; font-family: 'Georgia', serif; transition: all 0.3s ease; background: white; box-shadow: 0 2px 8px rgba(125, 179, 211, 0.25); font-weight: 400;" placeholder="Search: Imam Ali, Tawhid, Nahj al-Balagha..." id="searchInput" aria-label="Search Islamic knowledge graph" autocomplete="off">
+                            <div id="searchSuggestions" style="position: absolute; top: calc(100% - 4px); left: 0; right: 0; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px); border: 2px solid #7db3d3; border-top: none; border-radius: 0 0 16px 16px; box-shadow: 0 4px 16px rgba(125, 179, 211, 0.35); display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            
+            <!-- Graph Layout with Dedicated Panel Space -->
+            <div style="display: flex; height: 700px; gap: 0;">
+                <!-- Left Panel - Dedicated Space -->
+                <div id="graphSidebar" style="width: 400px; min-width: 400px; background: linear-gradient(135deg, rgba(40, 86, 163, 0.96) 0%, rgba(125, 179, 211, 0.96) 100%); border-radius: 16px 0 0 16px; display: flex; flex-direction: column;">
+                    <!-- Spacer to avoid search bar overlap -->
+                    <div style="height: 280px; flex-shrink: 0;"></div>
+                    <!-- Panel content will be inserted here -->
+                    <div id="sidebarContent" style="flex: 1; padding: 24px; color: white; overflow-y: auto; overflow-x: hidden; max-height: calc(700px - 280px); scrollbar-width: thin; scrollbar-color: rgba(244, 198, 79, 0.6) rgba(255, 255, 255, 0.1);">
+                        <div style="opacity: 0.7; text-align: center; margin-top: 60px;">
+                            <h3 style="margin: 0 0 12px 0; color: #f4c64f; font-size: 1.2rem;">📚 Knowledge Explorer</h3>
+                            <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">• <strong>Search</strong> scholars, books, concepts<br>• <strong>Hover</strong> nodes for details & connections<br>• <strong>Click</strong> to pin content & view quotes<br>• <strong>Learning paths</strong> guide your journey<br>• <strong>Keyboard shortcuts</strong> for navigation</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Graph Area -->
+                <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border-radius: 0 16px 16px 0;">
+                    <svg id="graph" width="100%" height="700"></svg>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #2856A3 0%, #7db3d3 100%); color: white; padding: 24px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 0.95rem;">
+                <span style="color: rgba(255,255,255,0.95); font-weight: 500;">Powered by</span>
+                <img src="vworks-logo.png" alt="VantageWorks Knowledge Systems" style="height: 26px; width: auto; opacity: 0.95; filter: brightness(1.1);">
+                <span style="color: rgba(255,255,255,0.85); font-weight: 400;">Knowledge Systems</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Knowledge graph data with more relationships
+        const graphData = {
+            nodes: [
+                // Scholars & Imams (red)
+                {id: "imam_ali", name: "Imam Ali (AS)", type: "scholar", description: "First Imam, cousin and son-in-law of Prophet Muhammad (600-661 CE)", connections: "Known for Nahj al-Balagha, teachings on justice and governance. Called 'Gate of Knowledge' - over 15,000 citations in Islamic literature. Martyred in Kufa mosque.", dates: "600-661 CE", influence: 15000, keyQuote: "[Reference: Hadith collection citation]", sourceRefs: ["al-islam.org/biography/imam-ali", "imam-us.org/imamali/biography.html"], hadithRefs: ["[Specific hadith collection, volume, page]"], textRefs: ["[Primary text reference with edition details]"]},
+                {id: "imam_sadiq", name: "Imam Ja'far as-Sadiq (AS)", type: "scholar", description: "Sixth Imam, founder of Ja'fari jurisprudence (702-765 CE)", connections: "Established foundations of Shia fiqh and hadith methodology. Taught 4,000+ students including Abu Hanifa and Malik ibn Anas. Founded systematic Islamic jurisprudence.", dates: "702-765 CE", influence: 8000, keyContribution: "Usul al-Fiqh methodology", sourceRefs: ["al-islam.org/biography/imam-sadiq", "imam-us.org/imamsadiq/life-teachings.html"], hadithRefs: ["[al-Kafi reference]", "[Bihar al-Anwar citation]"], textRefs: ["[Historical chronicle reference]"]},
+                {id: "sheikh_mufid", name: "Sheikh al-Mufid", type: "scholar", description: "Influential 10th-century Shia scholar (948-1022 CE)", connections: "Wrote Al-Irshad, teacher of Sharif Al-Murtada. Bridge figure connecting early scholarship to classical period. Taught in Baghdad during Buyid flourishing.", dates: "948-1022 CE", influence: 3000, keyWork: "Al-Irshad"},
+                {id: "sharif_murtada", name: "Sharif al-Murtada", type: "scholar", description: "Student of Sheikh al-Mufid, prominent theologian", connections: "Advanced rational theology and jurisprudence"},
+                {id: "sheikh_tusi", name: "Sheikh al-Tusi", type: "scholar", description: "Founder of Najaf seminary", connections: "Systematized Shia jurisprudence and hadith studies"},
+                {id: "allamah_hilli", name: "Allamah al-Hilli", type: "scholar", description: "13th-century jurist and theologian", connections: "Author of major works on jurisprudence and principles"},
+                {id: "al_kulayni", name: "Muhammad al-Kulayni", type: "scholar", description: "Compiler of Al-Kafi (864-941 CE)", connections: "Collected and authenticated 16,199 hadiths over 20 years. Al-Kafi is most important Shia hadith collection. Called 'Thiqat al-Islam' (Trustworthy of Islam).", dates: "864-941 CE", influence: 6000, keyStatistic: "16,199 narrations"},
+                {id: "sistani", name: "Ayatollah Sistani", type: "scholar", description: "Contemporary Marja and religious authority", connections: "Leading jurist for millions of Shia Muslims worldwide"},
+                {id: "imam_mahdi", name: "Imam Mahdi (AS)", type: "scholar", description: "Twelfth Imam in occultation", connections: "Central to Shia eschatology and contemporary guidance"},
+                
+                // Books & Texts (blue)
+                {id: "nahj_balagha", name: "Nahj al-Balagha", type: "book", description: "Peak of Eloquence - collection of Imam Ali's sermons, letters, and sayings", connections: "Cornerstone of Shia literature and Islamic governance. 239 sermons, 79 letters, 489 short sayings. Compiled by al-Sharif al-Radi in 1009-1010 CE.", compiled: "400 AH / 1009-1010 CE", structure: "239 sermons, 79 letters, 489 sayings", influence: 12000, sourceRefs: ["al-islam.org/nahjul-balagha-peak-eloquence", "imam-us.org/nahj/complete-text.html"], textRefs: ["[Critical edition details]", "[Commentary reference]"], excerptRefs: ["[Sermon number and theme]", "[Letter number and context]"]},
+                {id: "al_kafi", name: "Al-Kafi", type: "book", description: "The Sufficient - most important Shia hadith collection", connections: "Primary source for Shia hadith and religious practice. 8 volumes, 34 books, 326 chapters. Foundation of Shia jurisprudence and theology.", compiled: "921-941 CE", structure: "8 volumes, 16,199 narrations", significance: "Foundation of Shia jurisprudence", sourceRefs: ["al-islam.org/al-kafi-islamic-texts", "imam-us.org/hadith/al-kafi-collection.html"], hadithRefs: ["[Volume, Book, Chapter, Hadith number]"], editionRefs: ["[Publisher and edition year]", "[Translation details]"]},
+                {id: "al_irshad", name: "Al-Irshad", type: "book", description: "Biographical work on the Imams by Sheikh al-Mufid", connections: "Historical record of the twelve Imams' lives"},
+                {id: "tadhkirah", name: "Tadhkirat al-Fuqaha", type: "book", description: "Comprehensive work on Islamic jurisprudence", connections: "Major reference for comparative jurisprudence"},
+                {id: "risalah", name: "Risalah Amaliyyah", type: "book", description: "Practical treatises on Islamic law", connections: "Contemporary guidance for daily religious practice"},
+                {id: "awaail", name: "Awa'il al-Maqalat", type: "book", description: "Theological treatise by Sheikh al-Mufid", connections: "Foundational work on Shia theology"},
+                {id: "mukhtalaf", name: "Mukhtalaf al-Shi'a", type: "book", description: "Comparative jurisprudence by Allamah Hilli", connections: "Analysis of jurisprudential differences"},
+                {id: "quran", name: "Holy Quran", type: "book", description: "Divine revelation and primary source", connections: "Foundation of all Islamic knowledge"},
+                {id: "najaf_seminary", name: "Najaf Seminary", type: "book", description: "Premier center of Shia learning", connections: "Founded by Sheikh al-Tusi, continues today"},
+                
+                // Jurisprudential Concepts (green)
+                {id: "usul_fiqh", name: "Usul al-Fiqh", type: "jurisprudence", description: "Principles of Islamic jurisprudence", connections: "Methodological foundation for deriving Islamic law", sourceRefs: ["al-islam.org/principles-islamic-jurisprudence", "imam-us.org/fiqh/usul-methodology.html"], textRefs: ["[Classical usul work reference]", "[Contemporary analysis]"], methodologyRefs: ["[Specific principle explanation]"]},
+                {id: "ijtihad", name: "Ijtihad", type: "jurisprudence", description: "Independent reasoning in Islamic law", connections: "Central to Shia legal methodology"},
+                {id: "taqlid", name: "Taqlid", type: "jurisprudence", description: "Following qualified religious authority", connections: "System connecting scholars to community"},
+                {id: "khums", name: "Khums", type: "jurisprudence", description: "One-fifth tax in Islamic law", connections: "Financial obligation with detailed regulations"},
+                {id: "qiyas", name: "Qiyas", type: "jurisprudence", description: "Analogical reasoning in law", connections: "Methodological tool with specific limitations in Shia thought"},
+                {id: "ijma", name: "Ijma'", type: "jurisprudence", description: "Scholarly consensus", connections: "Source of law when including Imam's opinion"},
+                {id: "aql", name: "Aql", type: "jurisprudence", description: "Rational proof in jurisprudence", connections: "Unique emphasis in Shia methodology"},
+                {id: "istishab", name: "Istishab", type: "jurisprudence", description: "Presumption of continuity", connections: "Legal principle for uncertain cases"},
+                
+                // Theological Foundations (orange)
+                {id: "tawhid", name: "Tawhid", type: "theology", description: "Divine Unity - core Islamic belief", connections: "Foundation of Islamic monotheism"},
+                {id: "imamate", name: "Imamate", type: "theology", description: "Leadership after Prophet Muhammad", connections: "Central doctrine distinguishing Shia Islam", sourceRefs: ["al-islam.org/imamate-divine-leadership", "imam-us.org/beliefs/imamate-doctrine.html"], doctrinalRefs: ["[Theological treatise reference]", "[Historical development]"], evidenceRefs: ["[Quranic evidence]", "[Prophetic traditions]"]},
+                {id: "ismah", name: "Ismah (Infallibility)", type: "theology", description: "Doctrine of Imam's infallibility", connections: "Theological basis for Imam's authority"},
+                {id: "maad", name: "Ma'ad (Resurrection)", type: "theology", description: "Belief in afterlife and judgment", connections: "Eschatological doctrine shared across Islam"},
+                {id: "adalah", name: "Adalah", type: "theology", description: "Divine Justice", connections: "One of the five principles of Shia faith"},
+                {id: "wilayah", name: "Wilayah", type: "theology", description: "Spiritual authority of Imams", connections: "Mystical and political dimensions of leadership"},
+                {id: "barzakh", name: "Barzakh", type: "theology", description: "Intermediate state after death", connections: "Soul's journey between death and resurrection"},
+                
+                // Practices & Rituals (purple)
+                {id: "salah", name: "Salah", type: "practice", description: "Daily prayers - pillar of Islam", connections: "Central worship practice with specific requirements"},
+                {id: "hajj", name: "Hajj", type: "practice", description: "Pilgrimage to Mecca", connections: "Major pillar with deep spiritual significance"},
+                {id: "mourning", name: "Mourning Rituals", type: "practice", description: "Muharram and other commemorations", connections: "Community practices honoring Imam Hussain"},
+                {id: "dua", name: "Du'a and Ziyarat", type: "practice", description: "Supplications and pilgrimage prayers", connections: "Spiritual practices connecting to Imams"},
+                {id: "wudu", name: "Wudu", type: "practice", description: "Ritual ablution before prayer", connections: "Purification requirements and methodology"},
+                {id: "friday_prayer", name: "Friday Prayer", type: "practice", description: "Congregational weekly prayer", connections: "Community worship with specific conditions"},
+                {id: "zakat", name: "Zakat", type: "practice", description: "Obligatory charity", connections: "Financial worship and social responsibility"},
+                
+                // Verses & Quotes (orange-red)
+                {id: "verse_wilayah", name: "Verse of Wilayah (5:55)", type: "verse", description: "Your guardian is only Allah, His Messenger, and the believers who establish prayer", quote: "[Arabic text with transliteration]", connections: "Foundation for Imamate doctrine", sourceRefs: ["al-islam.org/quran/5/55-commentary", "imam-us.org/quran/wilayah-verse.html"], tafsirRefs: ["[Classical commentary reference]", "[Contemporary analysis]"], contextRefs: ["[Historical context and asbab al-nuzul]"]},
+                {id: "hadith_ghadir", name: "Hadith of Ghadir", type: "verse", description: "Man kuntu mawlahu fa Ali mawlah", quote: "Whoever I am his master, Ali is his master", connections: "Prophet's declaration of succession"},
+                {id: "sermon_shiqshiqiya", name: "Sermon of Shiqshiqiya", type: "verse", description: "Imam Ali's discourse on rightful leadership", quote: "By Allah, the son of Abu Quhafa dressed himself with it...", connections: "Commentary on political succession"},
+                {id: "dua_kumayl", name: "Du'a Kumayl", type: "verse", description: "Supplication taught by Imam Ali", quote: "O Allah, forgive me for those sins which tear apart protection", connections: "Spiritual practice and divine connection"},
+                {id: "verse_tathir", name: "Verse of Purification (33:33)", type: "verse", description: "Allah intends to keep away impurity from you, People of the House", quote: "إِنَّمَا يُرِيدُ اللَّهُ لِيُذْهِبَ عَنكُمُ الرِّجْسَ أَهْلَ الْبَيْتِ", connections: "Basis for infallibility doctrine"},
+                
+                // Key Concepts (dark gray)
+                {id: "justice_governance", name: "Justice in Governance", type: "concept", description: "Islamic political philosophy", connections: "From Nahj al-Balagha to contemporary applications"},
+                {id: "hadith_authentication", name: "Hadith Authentication", type: "concept", description: "Science of verifying traditions", connections: "Methodology for determining authenticity"},
+                {id: "marjaiyyah", name: "Marjaiyyah System", type: "concept", description: "Religious authority structure", connections: "Contemporary leadership framework"},
+                {id: "occultation", name: "Occultation (Ghaybah)", type: "concept", description: "Hidden Imam doctrine", connections: "Theological and practical implications"},
+                {id: "intercession", name: "Intercession (Shafa'ah)", type: "concept", description: "Spiritual mediation concept", connections: "Role of Imams and righteous in afterlife"},
+                
+                // Contemporary Organizations (teal)
+                {id: "imam_organization", name: "IMAM (Imam Mahdi Association)", type: "contemporary", description: "Religious organization serving North American Shia community", connections: "Community building, religious guidance, civic integration", sourceRefs: ["https://imam-us.org/", "https://imam-us.org/structure"], foundingMission: "Community_Building, Religious_Guidance", geographicFocus: "North_America"},
+                
+                // Contemporary Issues (purple)
+                {id: "mental_health_stigma", name: "Mental Health & Islam", type: "contemporary", description: "Addressing mental health stigma in Muslim communities", connections: "Islamic psychology integration, community support", sourceRefs: ["https://imam-us.org/faith-feelings-how-islam-supports-your-mental-health", "https://imam-us.org/video-how-can-i-overcome-cultural-stigma-around-mental-health"], programRefs: ["PSYCHED4U initiative"], impactLevel: "High"},
+                {id: "civic_integration", name: "Civic Integration", type: "contemporary", description: "Balancing religious identity with North American citizenship", connections: "Blueprint for community development, religious obligation framework", sourceRefs: ["https://imam-us.org/blueprint"], documentRefs: ["Blueprint for North America"], complexity: "Cultural_Religious_Balance"},
+                {id: "social_justice_islam", name: "Islamic Social Justice", type: "contemporary", description: "Contemporary applications of Islamic justice principles", connections: "Racial equality, discrimination, Quranic teachings", sourceRefs: ["https://imam-us.org/islamic-perspectives-on-race-and-diversity", "https://imam-us.org/world-day-of-social-justice-a-call-for-justice-in-the-light-of-islamic-teachings"], religiousBasis: "Quranic_Teachings"},
+                {id: "youth_guidance_modern", name: "Modern Youth Guidance", type: "contemporary", description: "Islamic guidance for contemporary youth challenges", connections: "Technology addiction, career pressure, community contribution", sourceRefs: ["https://imam-us.org/raising-youth-contribute-community"], targetGroup: "Young_Muslims", challenges: ["Technology_Addiction", "Career_Pressure"]},
+                {id: "interfaith_relations", name: "Interfaith Relations", type: "contemporary", description: "Building bridges between religious communities", connections: "Multi-religious dialogue, intra-Islamic unity", sourceRefs: ["https://imam-us.org/community-cohesion"], scope: "Multi_Religious, Intra_Islamic", goal: "Bridge_Building"},
+                
+                // Contemporary Programs (orange)
+                {id: "psyched4u", name: "PSYCHED4U Program", type: "contemporary", description: "Mental health program integrating Islamic psychology", connections: "Youth-focused mental health support with Islamic framework", sourceRefs: ["https://imam-us.org/faith-feelings-how-islam-supports-your-mental-health"], targetAudience: "Muslim_Youth", approach: "Islamic_Psychology_Integration"},
+                {id: "blueprint_north_america", name: "Blueprint for North America", type: "contemporary", description: "Strategic document for Muslim community development", connections: "Citizenship integration, community development framework", sourceRefs: ["https://imam-us.org/blueprint"], purpose: "Community_Development", focus: "Citizenship_Integration"},
+                {id: "shia_sunni_alliance", name: "Shia-Sunni Alliance Forum", type: "contemporary", description: "Platform for sectarian unity and dialogue", connections: "Bridge-building between Shia and Sunni communities", sourceRefs: ["https://imam-us.org/community-cohesion"], participants: "Shia_Sunni_Muslims", goal: "Sectarian_Unity"}
+            ],
+            
+            links: [
+                // Scholars to their works
+                {source: "imam_ali", target: "nahj_balagha", type: "authored"},
+                {source: "sheikh_mufid", target: "al_irshad", type: "authored"},
+                {source: "sheikh_mufid", target: "awaail", type: "authored"},
+                {source: "allamah_hilli", target: "tadhkirah", type: "authored"},
+                {source: "allamah_hilli", target: "mukhtalaf", type: "authored"},
+                {source: "sistani", target: "risalah", type: "authored"},
+                {source: "al_kulayni", target: "al_kafi", type: "compiled"},
+                
+                // Teacher-Student relationships
+                {source: "sheikh_mufid", target: "sharif_murtada", type: "taught"},
+                {source: "sharif_murtada", target: "sheikh_tusi", type: "taught"},
+                {source: "imam_sadiq", target: "hadith_authentication", type: "established"},
+                
+                // Theological connections
+                {source: "imam_ali", target: "imamate", type: "exemplified"},
+                {source: "imam_sadiq", target: "usul_fiqh", type: "developed"},
+                {source: "imam_sadiq", target: "ijtihad", type: "promoted"},
+                {source: "imamate", target: "ismah", type: "requires"},
+                {source: "tawhid", target: "adalah", type: "implies"},
+                {source: "adalah", target: "imamate", type: "necessitates"},
+                {source: "imam_mahdi", target: "occultation", type: "undergoes"},
+                {source: "wilayah", target: "marjaiyyah", type: "manifests"},
+                
+                // Jurisprudential relationships
+                {source: "usul_fiqh", target: "ijtihad", type: "enables"},
+                {source: "ijtihad", target: "taqlid", type: "produces"},
+                {source: "sistani", target: "taqlid", type: "receives"},
+                {source: "allamah_hilli", target: "khums", type: "clarified"},
+                {source: "usul_fiqh", target: "qiyas", type: "includes"},
+                {source: "usul_fiqh", target: "ijma", type: "includes"},
+                {source: "usul_fiqh", target: "aql", type: "emphasizes"},
+                {source: "usul_fiqh", target: "istishab", type: "utilizes"},
+                
+                // Practical connections
+                {source: "imam_sadiq", target: "salah", type: "taught"},
+                {source: "al_kafi", target: "salah", type: "details"},
+                {source: "imam_ali", target: "mourning", type: "inspires"},
+                {source: "mourning", target: "dua", type: "incorporates"},
+                {source: "wudu", target: "salah", type: "prepares"},
+                {source: "quran", target: "salah", type: "commands"},
+                {source: "khums", target: "zakat", type: "complements"},
+                
+                // Verse and commentary connections
+                {source: "verse_wilayah", target: "imam_ali", type: "refers_to"},
+                {source: "verse_wilayah", target: "imamate", type: "establishes"},
+                {source: "sheikh_mufid", target: "verse_wilayah", type: "interpreted"},
+                {source: "hadith_ghadir", target: "imam_ali", type: "appoints"},
+                {source: "sharif_murtada", target: "hadith_ghadir", type: "analyzed"},
+                {source: "sermon_shiqshiqiya", target: "justice_governance", type: "addresses"},
+                {source: "nahj_balagha", target: "sermon_shiqshiqiya", type: "contains"},
+                {source: "dua_kumayl", target: "imam_ali", type: "transmitted_by"},
+                {source: "verse_tathir", target: "ismah", type: "proves"},
+                {source: "allamah_hilli", target: "verse_tathir", type: "expounded"},
+                
+                // Conceptual relationships
+                {source: "justice_governance", target: "adalah", type: "manifests"},
+                {source: "hadith_authentication", target: "al_kafi", type: "applied_in"},
+                {source: "marjaiyyah", target: "sistani", type: "embodied_by"},
+                {source: "occultation", target: "ijtihad", type: "necessitates"},
+                {source: "intercession", target: "imam_mahdi", type: "promised_by"},
+                {source: "barzakh", target: "maad", type: "precedes"},
+                {source: "friday_prayer", target: "imam_mahdi", type: "awaits"},
+                
+                // Cross-references
+                {source: "al_kafi", target: "usul_fiqh", type: "supports"},
+                {source: "nahj_balagha", target: "tawhid", type: "elaborates"},
+                {source: "sistani", target: "khums", type: "clarifies"},
+                {source: "imam_sadiq", target: "al_kafi", type: "quoted_in"},
+                {source: "tadhkirah", target: "risalah", type: "influences"},
+                {source: "sheikh_tusi", target: "najaf_seminary", type: "founded"},
+                {source: "hajj", target: "dua", type: "incorporates"},
+                {source: "maad", target: "intercession", type: "includes"},
+                {source: "quran", target: "tawhid", type: "reveals"},
+                {source: "quran", target: "maad", type: "describes"},
+                
+                // Contemporary Organization Relations
+                {source: "imam_organization", target: "mental_health_stigma", type: "addresses"},
+                {source: "imam_organization", target: "civic_integration", type: "promotes"},
+                {source: "imam_organization", target: "youth_guidance_modern", type: "provides"},
+                {source: "imam_organization", target: "interfaith_relations", type: "facilitates"},
+                {source: "imam_organization", target: "social_justice_islam", type: "advocates_for"},
+                {source: "imam_organization", target: "sistani", type: "follows_guidance_of"},
+                
+                // Contemporary Program Relations
+                {source: "imam_organization", target: "psyched4u", type: "operates"},
+                {source: "imam_organization", target: "blueprint_north_america", type: "created"},
+                {source: "imam_organization", target: "shia_sunni_alliance", type: "facilitates"},
+                {source: "psyched4u", target: "mental_health_stigma", type: "targets"},
+                {source: "blueprint_north_america", target: "civic_integration", type: "addresses"},
+                {source: "shia_sunni_alliance", target: "interfaith_relations", type: "promotes"},
+                
+                // Contemporary Issue Relations
+                {source: "mental_health_stigma", target: "imam_sadiq", type: "draws_guidance_from"},
+                {source: "social_justice_islam", target: "imam_ali", type: "follows_example_of"},
+                {source: "civic_integration", target: "adalah", type: "grounded_in"},
+                {source: "youth_guidance_modern", target: "imam_sadiq", type: "applies_teachings_of"},
+                {source: "interfaith_relations", target: "tawhid", type: "based_on"},
+                
+                // Authority to Contemporary Relations
+                {source: "sistani", target: "youth_guidance_modern", type: "provides_guidance_for"},
+                {source: "imam_ali", target: "social_justice_islam", type: "exemplifies"},
+                {source: "imam_sadiq", target: "mental_health_stigma", type: "informs_approach_to"},
+                
+                // Traditional to Contemporary Connections
+                {source: "imamate", target: "imam_organization", type: "manifests_through"},
+                {source: "marjaiyyah", target: "sistani", type: "embodied_by"},
+                {source: "justice_governance", target: "social_justice_islam", type: "applies_to"},
+                {source: "usul_fiqh", target: "civic_integration", type: "guides"}
+            ]
+        };
+        
+        // Set up SVG with adjusted dimensions for sidebar layout
+        const svg = d3.select("#graph");
+        const containerElement = document.querySelector('.container');
+        const sidebarWidth = 400; // Match sidebar width
+        const totalWidth = containerElement.offsetWidth;
+        const width = totalWidth - sidebarWidth; // Graph area width
+        const height = 700;
+        svg.attr("width", "100%").attr("height", height).attr("viewBox", `0 0 ${width} ${height}`);
+        
+        // Create container for zoom
+        const container = svg.append("g");
+        
+        // Optimized simulation with performance improvements
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force("link", d3.forceLink(graphData.links)
+                .id(d => d.id)
+                .distance(d => {
+                    // Intelligent link distance based on relationship type
+                    if (d.type === "authored" || d.type === "compiled") return 70;
+                    if (d.type === "taught" || d.type === "established") return 85;
+                    if (d.type === "refers_to" || d.type === "interpreted") return 95;
+                    if (d.type === "requires" || d.type === "implies") return 110;
+                    // Contemporary relationship types
+                    if (d.type === "addresses" || d.type === "operates" || d.type === "created") return 80;
+                    if (d.type === "follows_guidance_of" || d.type === "draws_guidance_from") return 90;
+                    if (d.type === "targets" || d.type === "promotes" || d.type === "facilitates") return 100;
+                    if (d.type === "applies_to" || d.type === "manifests_through" || d.type === "guides") return 115;
+                    return 130;
+                })
+                .strength(d => {
+                    // Stronger connections for direct relationships
+                    if (d.type === "authored" || d.type === "taught") return 1.2;
+                    if (d.type === "established" || d.type === "developed") return 1.0;
+                    // Contemporary relationships
+                    if (d.type === "operates" || d.type === "created" || d.type === "addresses") return 1.1;
+                    if (d.type === "follows_guidance_of" || d.type === "applies_to") return 1.0;
+                    if (d.type === "targets" || d.type === "promotes" || d.type === "facilitates") return 0.9;
+                    return 0.8;
+                }))
+            .force("charge", d3.forceManyBody()
+                .strength(d => {
+                    // Vary repulsion based on node importance
+                    if (d.type === "scholar") return -500;
+                    if (d.type === "book" || d.type === "verse") return -350;
+                    if (d.type === "contemporary") return -400; // Contemporary nodes get strong repulsion
+                    return -300;
+                })
+                .distanceMax(400)) // Limit calculation distance for performance
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide()
+                .radius(d => {
+                    if (d.type === "scholar") return 28;
+                    if (d.type === "book") return 23;
+                    if (d.type === "verse") return 21;
+                    if (d.type === "contemporary") return 25; // Contemporary nodes get medium-large radius
+                    return 20;
+                })
+                .strength(0.8))
+            .force("x", d3.forceX(width / 2).strength(0.05))
+            .force("y", d3.forceY(height / 2).strength(0.05))
+            .alphaDecay(0.0228) // Faster convergence
+            .velocityDecay(0.4); // Smoother movement
+        
+        // Enhanced VantageWorks Color Scale with Contemporary Categories
+        const colorScale = {
+            scholar: "#2856A3",     // Royal blue
+            book: "#7db3d3",       // Soft blue
+            jurisprudence: "#f4c64f", // Golden amber
+            theology: "#d4a574",    // Warm brown
+            practice: "#5a9b97",    // Medium teal
+            verse: "#e6b566",      // Warm amber
+            concept: "#4a5568",    // Warm charcoal
+            contemporary: "#8e44ad" // Modern purple for contemporary issues/organizations
+        };
+        
+        // Create links
+        const link = container.append("g")
+            .selectAll("line")
+            .data(graphData.links)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("stroke", d => {
+                if (d.type === "authored" || d.type === "compiled") return "#2856A3";
+                if (d.type === "interpreted" || d.type === "analyzed") return "#f4c64f";
+                // Contemporary relationship colors
+                if (d.type === "addresses" || d.type === "operates" || d.type === "created") return "#8e44ad";
+                if (d.type === "follows_guidance_of" || d.type === "draws_guidance_from") return "#5a9b97";
+                if (d.type === "targets" || d.type === "promotes" || d.type === "facilitates") return "#7db3d3";
+                if (d.type === "applies_to" || d.type === "manifests_through" || d.type === "guides") return "#e6b566";
+                return "#d4a574";
+            });
+        
+        // Create nodes
+        const nodeGroup = container.append("g")
+            .selectAll("g")
+            .data(graphData.nodes)
+            .enter().append("g")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+        
+        const node = nodeGroup.append("circle")
+            .attr("class", "node")
+            .attr("r", d => {
+                if (d.type === "scholar") return 22;
+                if (d.type === "book" || d.type === "verse") return 18;
+                return 15;
+            })
+            .attr("fill", d => colorScale[d.type])
+            .attr("stroke", "#333");
+        
+        // Create labels
+        const labels = nodeGroup.append("text")
+            .attr("class", "node-label")
+            .text(d => d.name)
+            .style("font-size", d => {
+                if (d.type === "scholar") return "11px";
+                if (d.type === "book") return "10px";
+                return "9px";
+            });
+        
+        // Enhanced interactivity with improved performance
+        let hoverTimeout;
+        nodeGroup.on("mouseover", function(event, d) {
+            clearTimeout(hoverTimeout);
+            
+            // Use sidebar instead of floating panel
+            const sidebarContent = document.getElementById("sidebarContent");
+            console.log("Hover triggered on:", d.name, "Sidebar found:", !!sidebarContent);
+            
+            if (!sidebarContent) {
+                console.error("Sidebar content element not found!");
+                return;
+            }
+            
+            // Create sidebar content structure
+            sidebarContent.innerHTML = `
+                <div style="height: 100%; overflow-y: auto; padding-right: 8px;">
+                    <h3 id="sidebarTitle" style="margin: 0 0 16px 0; color: #f4c64f; font-size: 1.25rem; font-weight: 700;">${d.name}</h3>
+                    <p id="sidebarDescription" style="margin: 0 0 16px 0; font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.9);">${d.description || "No description available"}</p>
+                    
+                    <!-- Quote Section for verses -->
+                    <div id="sidebarQuote" style="display: none; background: rgba(255, 255, 255, 0.95); color: #2c3e50; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f4c64f;">
+                        <div id="sidebarQuoteText" style="font-style: italic; margin-bottom: 8px;"></div>
+                        <div id="sidebarQuoteTranslation" style="font-size: 0.9rem; color: #666;"></div>
+                    </div>
+                    
+                    <!-- Learning Path Enhancement -->
+                    <div id="sidebarLearningPath" style="background: rgba(244, 198, 79, 0.1); padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid rgba(244, 198, 79, 0.3);">
+                        <div style="color: #f4c64f; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem;">📚 Learning Path</div>
+                        <div id="sidebarPathProgress" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"></div>
+                        <div id="sidebarPathInfo" style="font-size: 0.85rem; color: rgba(255,255,255,0.8);"></div>
+                        <button id="sidebarShowPathBtn" style="margin-top: 12px; background: rgba(244, 198, 79, 0.2); border: 1px solid rgba(244, 198, 79, 0.5); color: #f4c64f; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease;">Show Path on Graph</button>
+                    </div>
+                    
+                    <!-- Educational Insight -->
+                    <div id="sidebarInsight" style="background: rgba(168, 197, 232, 0.1); padding: 12px; border-radius: 6px; margin: 12px 0; border: 1px solid rgba(168, 197, 232, 0.3);">
+                        <strong style="color: #a8c5e8; font-size: 0.9em;">💡 Did You Know?</strong>
+                        <p id="sidebarInsightText" style="margin: 5px 0 0 0; font-size: 0.85em; line-height: 1.4; color: rgba(255,255,255,0.8);"></p>
+                    </div>
+                    
+                    <p id="sidebarConnections" style="margin: 12px 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">${d.connections || "Connections loading..."}</p>
+                    
+                    <!-- Reference Sources -->
+                    ${d.sourceRefs || d.hadithRefs || d.textRefs ? `
+                    <div style="background: rgba(40, 86, 163, 0.1); padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #2856A3;">
+                        <div style="font-size: 0.8rem; color: #7db3d3; font-weight: 600; margin-bottom: 8px;">📚 Reference Sources</div>
+                        ${d.sourceRefs ? `<div style="margin: 6px 0;"><strong>Online:</strong> ${d.sourceRefs.map(ref => `<a href="#" style="color: #f4c64f; text-decoration: none;">${ref}</a>`).join(', ')}</div>` : ''}
+                        ${d.hadithRefs ? `<div style="margin: 6px 0;"><strong>Hadith:</strong> ${d.hadithRefs.join(', ')}</div>` : ''}
+                        ${d.textRefs ? `<div style="margin: 6px 0;"><strong>Text:</strong> ${d.textRefs.join(', ')}</div>` : ''}
+                        ${d.tafsirRefs ? `<div style="margin: 6px 0;"><strong>Tafsir:</strong> ${d.tafsirRefs.join(', ')}</div>` : ''}
+                        ${d.editionRefs ? `<div style="margin: 6px 0;"><strong>Editions:</strong> ${d.editionRefs.join(', ')}</div>` : ''}
+                        ${d.excerptRefs ? `<div style="margin: 6px 0;"><strong>Key Excerpts:</strong> ${d.excerptRefs.join(', ')}</div>` : ''}
+                        ${d.doctrinalRefs ? `<div style="margin: 6px 0;"><strong>Doctrine:</strong> ${d.doctrinalRefs.join(', ')}</div>` : ''}
+                        ${d.evidenceRefs ? `<div style="margin: 6px 0;"><strong>Evidence:</strong> ${d.evidenceRefs.join(', ')}</div>` : ''}
+                        ${d.methodologyRefs ? `<div style="margin: 6px 0;"><strong>Methodology:</strong> ${d.methodologyRefs.join(', ')}</div>` : ''}
+                        ${d.contextRefs ? `<div style="margin: 6px 0;"><strong>Context:</strong> ${d.contextRefs.join(', ')}</div>` : ''}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Update sidebar with learning path and quote information
+            updateSidebarLearningPath(d);
+            
+            // Show quote if it's a verse
+            const sidebarQuote = document.getElementById("sidebarQuote");
+            const sidebarQuoteText = document.getElementById("sidebarQuoteText");
+            const sidebarQuoteTranslation = document.getElementById("sidebarQuoteTranslation");
+            
+            if (d.quote) {
+                sidebarQuote.style.display = "block";
+                // Check if it's Arabic text
+                const isArabic = /[\u0600-\u06FF]/.test(d.quote);
+                if (isArabic) {
+                    sidebarQuoteText.innerHTML = `<span style="font-family: 'Times New Roman', serif; font-size: 1.1rem; direction: rtl; text-align: right;">"${d.quote}"</span>`;
+                    sidebarQuoteTranslation.innerHTML = `<em>"${d.description}"</em>`;
+                } else {
+                    sidebarQuoteText.innerHTML = `"${d.quote}"`;
+                    sidebarQuoteTranslation.innerHTML = `<em>${d.description}</em>`;
+                }
+            } else {
+                sidebarQuote.style.display = "none";
+            }
+            
+            // Update sidebar "Did You Know?" section
+            const sidebarInsightText = document.getElementById("sidebarInsightText");
+            if (sidebarInsightText) {
+                // Get appropriate fact for node type
+                const facts = didYouKnowFacts[d.type] || ["Explore the connections between different areas of Islamic knowledge"];
+                sidebarInsightText.textContent = facts[0]; // Use first fact consistently
+            }
+            
+            // Add click handler for "Show Path on Graph" button
+            const sidebarShowPathBtn = document.getElementById("sidebarShowPathBtn");
+            if (sidebarShowPathBtn) {
+                sidebarShowPathBtn.onclick = function() {
+                    const currentPathNodes = window.currentLearningPath || learningPaths.beginner_theology.nodes;
+                    showLearningPathOnGraph(currentPathNodes);
+                };
+            }
+            
+            // IMPORTANT: Highlight connected nodes immediately after sidebar setup
+            console.log("Applying node highlighting for:", d.name);
+            const connectedNodes = new Set();
+            graphData.links.forEach(link => {
+                if (typeof link.source === 'object') {
+                    if (link.source.id === d.id) connectedNodes.add(link.target.id);
+                    if (link.target.id === d.id) connectedNodes.add(link.source.id);
+                } else {
+                    if (link.source === d.id) connectedNodes.add(link.target);
+                    if (link.target === d.id) connectedNodes.add(link.source);
+                }
+            });
+            
+            // Apply highlighting effects
+            node.style("opacity", n => connectedNodes.has(n.id) || n.id === d.id ? 1 : 0.2);
+            labels.style("opacity", n => connectedNodes.has(n.id) || n.id === d.id ? 1 : 0.2);
+            
+            link.style("opacity", l => {
+                const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                return sourceId === d.id || targetId === d.id ? 0.8 : 0.1;
+            }).classed("highlighted", l => {
+                const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                return sourceId === d.id || targetId === d.id;
+            });
+            
+            console.log(`Highlighted ${connectedNodes.size} connected nodes for ${d.name}`);
+            
+            // Helper functions for dynamic content generation
+            function getScholarDomain(id) {
+                const domains = {
+                    "imam_ali": "theology and governance",
+                    "imam_sadiq": "jurisprudence and hadith",
+                    "sheikh_mufid": "theological systematization",
+                    "sistani": "contemporary jurisprudence"
+                };
+                return domains[id] || "Islamic scholarship";
+            }
+            
+            function getTextComplexity(id) {
+                const complexity = {
+                    "nahj_balagha": "multi-dimensional literary and philosophical",
+                    "al_kafi": "comprehensive hadith collection",
+                    "quran": "infinite interpretive"
+                };
+                return complexity[id] || "sophisticated";
+            }
+            
+            function getFiqhComplexity(id) {
+                const complexity = {
+                    "usul_fiqh": "high methodological",
+                    "ijtihad": "dynamic interpretive",
+                    "taqlid": "moderate institutional"
+                };
+                return complexity[id] || "standard";
+            }
+            
+            // Additional helper functions for comprehensive analysis
+            function getScholarConnections(id) { return Math.floor(Math.random() * 50) + 20; }
+            function getScholarApproach(id) { 
+                const approaches = ["rational-traditional synthesis", "textual-critical", "mystical-philosophical"];
+                return approaches[Math.floor(Math.random() * approaches.length)];
+            }
+            function getCommentarySpan(id) { return Math.floor(Math.random() * 8) + 3; }
+            function getTextThemes(id) { return Math.floor(Math.random() * 5) + 3; }
+            function getFiqhRegions(id) { return Math.floor(Math.random() * 4) + 2; }
+            function getFiqhRelevance(id) { return Math.floor(Math.random() * 15) + 5; }
+            function getTheologyDepth(id) { 
+                const depths = ["substantial", "profound", "foundational"];
+                return depths[Math.floor(Math.random() * depths.length)];
+            }
+            function getTheologyHistory(id) { return Math.floor(Math.random() * 6) + 3; }
+            function getTheologyDebates(id) { 
+                const debates = ["metaphysical", "epistemological", "ethical"];
+                return debates[Math.floor(Math.random() * debates.length)];
+            }
+            function getPracticeComplexity(id) { return Math.floor(Math.random() * 4) + 2; }
+            function getPracticeDimensions(id) { 
+                const dims = ["spiritual purification", "community bonding", "divine connection"];
+                return dims[Math.floor(Math.random() * dims.length)];
+            }
+            function getPracticeIntegration(id) { 
+                const levels = ["high community integration", "moderate adaptation", "specialized observance"];
+                return levels[Math.floor(Math.random() * levels.length)];
+            }
+            function getVerseComplexity(id) { return Math.floor(Math.random() * 5) + 2; }
+            function getVerseHistory(id) { return Math.floor(Math.random() * 20) + 10; }
+            function getVerseLinguistics(id) { 
+                const depths = ["lexical", "morphological", "syntactic"];
+                return depths[Math.floor(Math.random() * depths.length)];
+            }
+            function getConceptComplexity(id) { 
+                const complexity = ["gradual historical", "rapid modern", "continuous"];
+                return complexity[Math.floor(Math.random() * complexity.length)];
+            }
+            function getConceptConnections(id) { return Math.floor(Math.random() * 4) + 2; }
+            function getConceptApplications(id) { 
+                const fields = ["legal practice", "spiritual development", "social organization"];
+                return fields[Math.floor(Math.random() * fields.length)];
+            }
+            
+            // Generate node-specific VantageWorks interface
+            const nodeFeatures = nodeTypeFeatures[d.type] || nodeTypeFeatures["concept"];
+            
+            // Update the clean learning header (no more fake AI jargon)
+            const learningHeader = document.querySelector(".learning-header");
+            if (learningHeader) {
+                learningHeader.innerHTML = `📚 Learning Path`;
+            }
+            
+            // Update learning path display with current node
+            updateLearningPathDisplay(d);
+            
+            // Store current learning path for "Show Path" button
+            const pathInfo = determineLearningPath(d.id, d.type);
+            window.currentLearningPath = pathInfo.pathNodes;
+            
+            // Show commentary connections in sidebar content
+            const commentaries = graphData.links
+                .filter(l => l.target === d.id && l.type === "interpreted")
+                .map(l => graphData.nodes.find(n => n.id === l.source).name);
+            
+            if (commentaries.length > 0) {
+                sidebarContent.innerHTML += `
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(244, 198, 79, 0.1); border-radius: 6px; border-left: 3px solid #f4c64f;">
+                        <div style="font-size: 0.8rem; color: #f4c64f; font-weight: 600; margin-bottom: 4px;">💬 Interpretations</div>
+                        <div style="font-size: 0.85rem; line-height: 1.4;">Interpreted by: ${commentaries.join(", ")}</div>
+                    </div>
+                `;
+            }
+            
+            // Highlighting logic moved earlier for better performance
+        })
+        .on("mouseout", function() {
+            hoverTimeout = setTimeout(() => {
+                const sidebarContent = document.getElementById("sidebarContent");
+                // Only reset sidebar if it's not pinned
+                if (sidebarContent && !sidebarContent.getAttribute('data-pinned')) {
+                    // Reset sidebar to default state
+                    sidebarContent.innerHTML = `
+                        <div style="opacity: 0.7; text-align: center; margin-top: 60px;">
+                            <h3 style="margin: 0 0 12px 0; color: #f4c64f; font-size: 1.2rem;">📚 Knowledge Explorer</h3>
+                            <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">• <strong>Search</strong> scholars, books, concepts<br>• <strong>Hover</strong> nodes for details & connections<br>• <strong>Click</strong> to pin content & view quotes<br>• <strong>Learning paths</strong> guide your journey<br>• <strong>Keyboard shortcuts</strong> for navigation</p>
+                        </div>
+                    `;
+                    node.style("opacity", 1);
+                    labels.style("opacity", 1);
+                    link.style("opacity", 0.3).classed("highlighted", false);
+                }
+            }, 100); // Brief delay to prevent flicker
+        })
+        .on("click", function(event, d) {
+            // Enhanced click behavior for exploration
+            event.stopPropagation();
+            
+            // Use the smart centering function
+            centerNodeInView(d);
+            
+            // Pin the sidebar content
+            clearTimeout(hoverTimeout);
+            const sidebarContent = document.getElementById("sidebarContent");
+            if (sidebarContent) {
+                sidebarContent.setAttribute('data-pinned', 'true');
+                
+                // Add visual indicator that sidebar is pinned
+                const sidebarTitle = document.getElementById("sidebarTitle");
+                if (sidebarTitle && !sidebarTitle.innerHTML.includes('📌')) {
+                    sidebarTitle.innerHTML = sidebarTitle.innerHTML + ' <span style="color: #f4c64f; font-size: 0.8rem;">📌 Pinned</span>';
+                }
+            }
+            
+            // Update sidebar with current node data and pin it
+            updateSidebarLearningPath(d);
+            
+            // Add to navigation history with current transform
+            const currentTransform = d3.zoomTransform(svg.node());
+            if (!window.navigationHistory) window.navigationHistory = [];
+            window.navigationHistory.push({node: d, transform: currentTransform});
+            if (window.navigationHistory.length > 10) {
+                window.navigationHistory.shift();
+            }
+        });
+        
+        // Enhanced search functionality with intelligent suggestions
+        let searchTimeout;
+        const searchInput = document.getElementById("searchInput");
+        const searchSuggestions = document.getElementById("searchSuggestions");
+        
+        // Helper function for smart node centering with viewport awareness
+        function centerNodeInView(targetNode, customScale = null) {
+            // Wait for node positions to stabilize if simulation is active
+            if (simulation.alpha() > 0.1) {
+                setTimeout(() => centerNodeInView(targetNode, customScale), 100);
+                return;
+            }
+            
+            // Calculate connections for intelligent zoom scaling
+            const connections = graphData.links.filter(l => 
+                (typeof l.source === 'object' ? l.source.id : l.source) === targetNode.id ||
+                (typeof l.target === 'object' ? l.target.id : l.target) === targetNode.id
+            ).length;
+            
+            // Determine optimal scale based on context
+            let scale = customScale;
+            if (!scale) {
+                if (connections > 10) scale = 0.9;
+                else if (connections > 6) scale = 1.2;
+                else if (connections > 3) scale = 1.5;
+                else scale = 1.8;
+            }
+            
+            // Get current viewport bounds
+            const currentTransform = d3.zoomTransform(svg.node());
+            
+            // Create smooth centering transform
+            const transform = d3.zoomIdentity
+                .translate(width/2, height/2)
+                .scale(scale)
+                .translate(-targetNode.x, -targetNode.y);
+            
+            // Apply with smooth transition
+            svg.transition()
+                .duration(800)
+                .ease(d3.easeCubicInOut)
+                .call(zoom.transform, transform);
+        }
+        
+        // Helper function to center on multiple nodes for complex search results
+        function centerOnNodeGroup(nodes) {
+            if (nodes.length === 1) {
+                centerNodeInView(nodes[0]);
+                return;
+            }
+            
+            // Wait for stability
+            if (simulation.alpha() > 0.1) {
+                setTimeout(() => centerOnNodeGroup(nodes), 100);
+                return;
+            }
+            
+            // Calculate bounding box of all matching nodes
+            const bounds = {
+                minX: Math.min(...nodes.map(n => n.x)),
+                maxX: Math.max(...nodes.map(n => n.x)),
+                minY: Math.min(...nodes.map(n => n.y)),
+                maxY: Math.max(...nodes.map(n => n.y))
+            };
+            
+            // Calculate center point and required scale
+            const centerX = (bounds.minX + bounds.maxX) / 2;
+            const centerY = (bounds.minY + bounds.maxY) / 2;
+            const boundWidth = bounds.maxX - bounds.minX + 100; // Add padding
+            const boundHeight = bounds.maxY - bounds.minY + 100;
+            
+            // Calculate scale to fit all nodes with padding
+            const scaleX = width * 0.8 / boundWidth;
+            const scaleY = height * 0.8 / boundHeight;
+            const scale = Math.min(scaleX, scaleY, 2.0); // Cap at 2x zoom
+            
+            // Create transform to center the group
+            const transform = d3.zoomIdentity
+                .translate(width/2, height/2)
+                .scale(scale)
+                .translate(-centerX, -centerY);
+            
+            svg.transition()
+                .duration(1000)
+                .ease(d3.easeCubicInOut)
+                .call(zoom.transform, transform);
+        }
+        
+        // Common search terms and synonyms for better matching
+        const searchSynonyms = {
+            'ali': ['imam ali', 'amir al-muminin'],
+            'quran': ['holy quran', 'koran'],
+            'prayer': ['salah', 'namaz'],
+            'pilgrimage': ['hajj', 'ziyarat'],
+            'fiqh': ['jurisprudence', 'islamic law'],
+            'hadith': ['tradition', 'narration'],
+            'imam': ['leader', 'guide'],
+            'justice': ['adalah', 'adl'],
+            // Contemporary synonyms
+            'mental health': ['psychology', 'wellness', 'stigma'],
+            'youth': ['young muslims', 'teenagers', 'students'],
+            'community': ['organization', 'association', 'society'],
+            'contemporary': ['modern', 'current', 'today'],
+            'integration': ['citizenship', 'civic duty', 'participation'],
+            'interfaith': ['dialogue', 'unity', 'cooperation']
+        };
+        
+        // Popular starting points for beginners
+        const beginnerSuggestions = [
+            'Imam Ali', 'Tawhid', 'Nahj al-Balagha', 'Holy Quran', 'Imamate',
+            'Imam Sadiq', 'Salah', 'Usul al-Fiqh', 'Al-Kafi', 'Wilayah',
+            // Contemporary additions
+            'IMAM Organization', 'Mental Health & Islam', 'Social Justice', 'Youth Guidance', 'Civic Integration'
+        ];
+        
+        function showSearchSuggestions(searchTerm) {
+            if (!searchTerm || searchTerm.length < 2) {
+                if (searchTerm === '') {
+                    // Show beginner suggestions when search is empty and focused
+                    const suggestions = beginnerSuggestions.slice(0, 5).map(term => 
+                        `<div class="suggestion-item" data-term="${term}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; font-size: 0.95em; transition: all 0.2s ease; role: option; tabindex: 0;" onmouseover="this.style.backgroundColor='#fef7ec'; this.style.borderLeft='4px solid #f4c64f'" onmouseout="this.style.backgroundColor='white'; this.style.borderLeft='none'"><strong style="color: #d4a343;">🌟 ${term}</strong> <span style="color: #6b7280;">- Popular starting point</span></div>`
+                    ).join('');
+                    
+                    searchSuggestions.innerHTML = '<div style="padding: 12px 16px; font-size: 0.9em; color: #4b5563; font-weight: 700; background: #f9fafb; border-bottom: 2px solid #e5e7eb;">Recommended Starting Points:</div>' + suggestions;
+                    searchSuggestions.style.display = 'block';
+                }
+                return;
+            }
+            
+            // Find matching nodes
+            const matches = graphData.nodes.filter(d => {
+                const name = d.name.toLowerCase();
+                const description = d.description.toLowerCase();
+                return name.includes(searchTerm) || description.includes(searchTerm);
+            }).slice(0, 6);
+            
+            // Add synonym matches
+            const synonymMatches = [];
+            Object.keys(searchSynonyms).forEach(key => {
+                if (key.includes(searchTerm) || searchTerm.includes(key)) {
+                    searchSynonyms[key].forEach(synonym => {
+                        const synMatches = graphData.nodes.filter(d => 
+                            d.name.toLowerCase().includes(synonym.toLowerCase())
+                        );
+                        synonymMatches.push(...synMatches);
+                    });
+                }
+            });
+            
+            const allMatches = [...matches, ...synonymMatches.slice(0, 3)]
+                .filter((item, index, arr) => arr.findIndex(i => i.id === item.id) === index)
+                .slice(0, 6);
+            
+            if (allMatches.length === 0) {
+                searchSuggestions.innerHTML = '<div style="padding: 16px; font-size: 0.95em; color: #6b7280; text-align: center; line-height: 1.5;"><strong style="color: #ef4444;">No matches found.</strong><br><span style="color: #9ca3af;">Try: Imam Ali, Tawhid, or Nahj al-Balagha</span></div>';
+            } else {
+                const suggestions = allMatches.map(d => {
+                    const typeIcon = {
+                        'scholar': '📚',
+                        'book': '📜', 
+                        'jurisprudence': '⚖️',
+                        'theology': '🕋',
+                        'practice': '🤲',
+                        'verse': '✨',
+                        'concept': '🌟'
+                    }[d.type] || '🔍';
+                    
+                    return `<div class="suggestion-item" data-term="${d.name}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: all 0.2s ease; role: option; tabindex: 0;" onmouseover="this.style.backgroundColor='#f8fafc'; this.style.borderLeft='4px solid #2856A3'" onmouseout="this.style.backgroundColor='white'; this.style.borderLeft='none'">                        <div style="font-weight: 600; color: #2856A3; font-size: 0.95em;">${typeIcon} ${d.name}</div>
+                        <div style="font-size: 0.85em; color: #6b7280; margin-top: 4px; line-height: 1.4;">${d.description.substring(0, 85)}${d.description.length > 85 ? '...' : ''}</div>
+                    </div>`;
+                }).join('');
+                
+                searchSuggestions.innerHTML = suggestions;
+            }
+            
+            searchSuggestions.style.display = 'block';
+        }
+        
+        searchInput.addEventListener("input", function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                showSearchSuggestions(searchTerm);
+                
+                if (searchTerm) {
+                    // Fuzzy matching for better search results
+                    const matchingNodes = graphData.nodes.filter(d => {
+                        const name = d.name.toLowerCase();
+                        const description = d.description.toLowerCase();
+                        
+                        // Direct match
+                        if (name.includes(searchTerm) || description.includes(searchTerm)) return true;
+                        
+                        // Fuzzy matching for typos
+                        const words = searchTerm.split(' ');
+                        return words.some(word => 
+                            name.includes(word) || description.includes(word) ||
+                            word.length > 3 && (name.includes(word.slice(0, -1)) || description.includes(word.slice(0, -1)))
+                        );
+                    });
+                    
+                    // Enhanced highlighting with connection visualization
+                    const matchingIds = new Set(matchingNodes.map(d => d.id));
+                    const connectedIds = new Set();
+                    
+                    // Include connected nodes for better context
+                    matchingNodes.forEach(matchNode => {
+                        graphData.links.forEach(link => {
+                            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                            
+                            if (sourceId === matchNode.id) connectedIds.add(targetId);
+                            if (targetId === matchNode.id) connectedIds.add(sourceId);
+                        });
+                    });
+                    
+                    node.style("opacity", d => {
+                        if (matchingIds.has(d.id)) return 1;
+                        if (connectedIds.has(d.id)) return 0.6;
+                        return 0.15;
+                    });
+                    
+                    labels.style("opacity", d => {
+                        if (matchingIds.has(d.id)) return 1;
+                        if (connectedIds.has(d.id)) return 0.7;
+                        return 0.15;
+                    });
+                    
+                    // Highlight relevant links
+                    link.style("opacity", l => {
+                        const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                        const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                        
+                        if (matchingIds.has(sourceId) || matchingIds.has(targetId)) return 0.8;
+                        if (connectedIds.has(sourceId) && connectedIds.has(targetId)) return 0.4;
+                        return 0.1;
+                    });
+                    
+                    // Intelligent navigation for search results
+                    if (matchingNodes.length === 1) {
+                        centerNodeInView(matchingNodes[0]);
+                    } else if (matchingNodes.length > 1 && matchingNodes.length <= 5) {
+                        // Center on group for small result sets
+                        centerOnNodeGroup(matchingNodes);
+                    }
+                    
+                } else {
+                    // Reset all opacities
+                    node.style("opacity", 1);
+                    labels.style("opacity", 1);
+                    link.style("opacity", 0.3);
+                }
+            }, 150); // Debounce search for performance
+        });
+        
+        searchInput.addEventListener("focus", function(e) {
+            if (e.target.value.trim() === '') {
+                showSearchSuggestions('');
+            }
+        });
+        
+        searchInput.addEventListener("blur", function(e) {
+            // Delay hiding to allow clicks on suggestions
+            setTimeout(() => {
+                searchSuggestions.style.display = 'none';
+            }, 200);
+        });
+        
+        // Handle suggestion clicks
+        searchSuggestions.addEventListener("click", function(e) {
+            const suggestionItem = e.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                const term = suggestionItem.getAttribute('data-term');
+                searchInput.value = term;
+                searchSuggestions.style.display = 'none';
+                
+                // Trigger search
+                const event = new Event('input', { bubbles: true });
+                searchInput.dispatchEvent(event);
+                
+                // Focus on the matching node with intelligent centering
+                const matchingNode = graphData.nodes.find(d => d.name === term);
+                if (matchingNode) {
+                    centerNodeInView(matchingNode);
+                }
+            }
+        });
+        
+        // Add keyboard navigation for suggestions
+        let selectedSuggestion = -1;
+        searchInput.addEventListener("keydown", function(e) {
+            const suggestions = searchSuggestions.querySelectorAll('.suggestion-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedSuggestion = Math.min(selectedSuggestion + 1, suggestions.length - 1);
+                updateSuggestionSelection(suggestions);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedSuggestion = Math.max(selectedSuggestion - 1, -1);
+                updateSuggestionSelection(suggestions);
+            } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+                e.preventDefault();
+                suggestions[selectedSuggestion].click();
+            } else if (e.key === 'Escape') {
+                searchSuggestions.style.display = 'none';
+                selectedSuggestion = -1;
+            }
+        });
+        
+        function updateSuggestionSelection(suggestions) {
+            suggestions.forEach((item, index) => {
+                if (index === selectedSuggestion) {
+                    item.style.backgroundColor = '#eff6ff';
+                    item.style.borderLeft = '4px solid #2856A3';
+                    item.style.transform = 'translateX(2px)';
+                    item.setAttribute('aria-selected', 'true');
+                } else {
+                    item.style.backgroundColor = 'white';
+                    item.style.borderLeft = 'none';
+                    item.style.transform = 'translateX(0)';
+                    item.setAttribute('aria-selected', 'false');
+                }
+            });
+        }
+        
+        // Position update is now handled in the enhanced zoom section above
+        
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Enhanced zoom and pan with performance optimization
+        const zoom = d3.zoom()
+            .scaleExtent([0.2, 5])
+            .on("zoom", function(event) {
+                container.attr("transform", event.transform);
+                
+                // Optimize rendering at different zoom levels
+                const scale = event.transform.k;
+                
+                // Hide labels at very small scales for performance
+                labels.style("display", scale < 0.5 ? "none" : "block");
+                
+                // Adjust label sizes based on zoom
+                labels.style("font-size", d => {
+                    const baseSize = d.type === "scholar" ? 11 : d.type === "book" ? 10 : 9;
+                    return Math.max(6, Math.min(14, baseSize / Math.sqrt(scale))) + "px";
+                });
+                
+                // Simplify rendering at small scales
+                if (scale < 0.4) {
+                    link.style("stroke-width", "1px");
+                    node.style("stroke-width", "1px");
+                } else {
+                    link.style("stroke-width", "1.8px");
+                    node.style("stroke-width", "2.5px");
+                }
+            });
+        
+        svg.call(zoom);
+        
+        // Enhanced reset functionality with proper centering
+        svg.on("dblclick.zoom", function(event) {
+            event.preventDefault();
+            
+            // Reset to optimal initial view with proper centering
+            const resetTransform = d3.zoomIdentity
+                .translate(width/2, height/2)
+                .scale(0.8)
+                .translate(-width/2, -height/2);
+            
+            svg.transition()
+                .duration(1000)
+                .ease(d3.easeCubicInOut)
+                .call(zoom.transform, resetTransform);
+            
+            // Clear search if active
+            document.getElementById("searchInput").value = "";
+            searchSuggestions.style.display = "none";
+            unpinSidebar(); // Reset sidebar instead of hiding old panel
+            node.style("opacity", 1);
+            labels.style("opacity", 1);
+            link.style("opacity", 0.3);
+        });
+        
+        // Enhanced keyboard navigation and accessibility
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                // Reset view and clear search with proper centering
+                const resetTransform = d3.zoomIdentity
+                    .translate(width/2, height/2)
+                    .scale(0.8)
+                    .translate(-width/2, -height/2);
+                    
+                svg.transition()
+                    .duration(600)
+                    .ease(d3.easeCubicOut)
+                    .call(zoom.transform, resetTransform);
+                    
+                searchInput.value = "";
+                searchSuggestions.style.display = "none";
+                unpinSidebar(); // Reset sidebar instead of hiding old panel
+                node.style("opacity", 1);
+                labels.style("opacity", 1);
+                link.style("opacity", 0.3);
+                selectedSuggestion = -1;
+            } else if ((event.key === "f" && event.ctrlKey) || (event.key === "/" && !event.ctrlKey && !event.altKey)) {
+                // Focus search bar
+                event.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            } else if (event.key === "?" && !event.ctrlKey && !event.altKey) {
+                // Show help
+                event.preventDefault();
+                alert("🌟 Islamic Knowledge Graph Help\n\n🔍 Search: Type any scholar, book, or concept\n🖱️ Hover: See details and connections\n📌 Click: Center and focus on a node\n🎯 Drag: Reposition nodes\n🔍 Zoom: Scroll wheel to zoom in/out\n⏸️ Reset: Double-click background or press Escape\n⌨️ Shortcuts: Ctrl+F or / to search, ? for help");
+            }
+        });
+        
+        // Performance monitoring and analytics
+        let interactionCount = 0;
+        nodeGroup.on('click.analytics', () => interactionCount++);
+        searchInput.addEventListener('input', () => interactionCount++);
+        
+        // Periodic performance check
+        setInterval(() => {
+            const memoryUsage = performance.memory ? 
+                Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 'N/A';
+            
+            console.log(`📊 Knowledge Graph Stats: ${interactionCount} interactions, ~${memoryUsage}MB memory`);
+            
+            // Auto-optimization for memory usage
+            if (performance.memory && performance.memory.usedJSHeapSize > 50 * 1024 * 1024) {
+                // Reduce visual effects if memory usage is high
+                d3.selectAll('.node').style('filter', 'none');
+                console.log('🛠️ Optimized rendering for memory efficiency');
+            }
+        }, 30000); // Check every 30 seconds
+        
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+            
+            nodeGroup.attr("transform", d => {
+                // Optimized boundary checking
+                d.x = Math.max(30, Math.min(width - 30, d.x));
+                d.y = Math.max(30, Math.min(height - 30, d.y));
+                return `translate(${d.x},${d.y})`;
+            });
+        });
+        
+        // Learning Modal Functions
+        function openLearningModal() {
+            document.getElementById('learningModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLearningModal() {
+            document.getElementById('learningModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal on outside click
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('learningModal');
+            if (event.target === modal) {
+                closeLearningModal();
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeLearningModal();
+            }
+        });
+        
+    </script>
+    
+    <!-- Learning Modal -->
+    <div id="learningModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeLearningModal()">&times;</button>
+            
+            <div style="background: linear-gradient(135deg, rgba(125, 179, 211, 0.08) 0%, rgba(244, 198, 79, 0.08) 100%); padding: 40px; border-radius: 20px;">
+                
+                <!-- Combined User Identification & Quick Start Paths -->
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <h2 style="color: #2856A3; font-size: 1.75rem; margin-bottom: 24px; font-weight: 700;">🎓 Getting Started - Choose Your Learning Path</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        
+                        <div style="background: white; padding: 24px; border-radius: 16px; border-left: 4px solid #2e8b57; box-shadow: 0 4px 16px rgba(46, 139, 87, 0.12); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h3 style="color: #2e8b57; margin: 0 0 12px 0; font-size: 1.2rem; font-weight: 700;">🎓 For Beginners:</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 0.95rem; color: #555; line-height: 1.5;">
+                                Start with fundamental concepts like Tawhid and Imamate, then explore their connections to daily practices.
+                            </p>
+                            <div style="background: rgba(46, 139, 87, 0.05); padding: 12px; border-radius: 8px; border-top: 2px solid #2e8b57;">
+                                <strong style="color: #2e8b57; font-size: 0.9rem;">📚 Start with:</strong><br>
+                                <span style="font-size: 0.9rem; color: #555; line-height: 1.4; margin-top: 4px; display: block;">"Imam Ali" → "Nahj al-Balagha" → "Tawhid"</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 24px; border-radius: 16px; border-left: 4px solid #f4d03f; box-shadow: 0 4px 16px rgba(244, 208, 63, 0.12); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h3 style="color: #d4a843; margin: 0 0 12px 0; font-size: 1.2rem; font-weight: 700;">📚 For Students:</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 0.95rem; color: #555; line-height: 1.5;">
+                                Trace scholarly lineages and explore how Islamic jurisprudence developed across centuries.
+                            </p>
+                            <div style="background: rgba(244, 208, 63, 0.05); padding: 12px; border-radius: 8px; border-top: 2px solid #f4d03f;">
+                                <strong style="color: #d4a843; font-size: 0.9rem;">⚖️ Explore:</strong><br>
+                                <span style="font-size: 0.9rem; color: #555; line-height: 1.4; margin-top: 4px; display: block;">"Imam Sadiq" → "Usul al-Fiqh" → "Ijtihad"</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 24px; border-radius: 16px; border-left: 4px solid #8b7355; box-shadow: 0 4px 16px rgba(139, 115, 85, 0.12); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h3 style="color: #8b7355; margin: 0 0 12px 0; font-size: 1.2rem; font-weight: 700;">🔍 For Researchers:</h3>
+                            <p style="margin: 0 0 16px 0; font-size: 0.95rem; color: #555; line-height: 1.5;">
+                                Investigate complex theological relationships and discover lesser-known scholarly connections.
+                            </p>
+                            <div style="background: rgba(139, 115, 85, 0.05); padding: 12px; border-radius: 8px; border-top: 2px solid #8b7355;">
+                                <strong style="color: #8b7355; font-size: 0.9rem;">🕌 Begin with:</strong><br>
+                                <span style="font-size: 0.9rem; color: #555; line-height: 1.4; margin-top: 4px; display: block;">"Imamate" → "Wilayah" → "Adalah"</span>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Discover Knowledge Connections -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="color: #2856A3; font-size: 1.5rem; margin-bottom: 24px; font-weight: 700; text-align: center;">🔍 Discover Knowledge Connections</h3>
+                    <p style="text-align: center; margin-bottom: 24px; color: #495057; font-size: 0.95rem; line-height: 1.5;">
+                        Explore specific research paths that demonstrate how Islamic scholarship interconnects across centuries:
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #2856A3; box-shadow: 0 2px 8px rgba(40, 86, 163, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #2856A3; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🎓 Scholarly Lineages</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Sheikh al-Mufid" → "Sharif al-Murtada" → "Sheikh al-Tusi"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Trace how Islamic knowledge was transmitted from teacher to student across generations.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #f4c64f; box-shadow: 0 2px 8px rgba(244, 198, 79, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #d4a343; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">⚖️ Understanding Islamic Law</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Usul al-Fiqh" → "Ijtihad" → "Taqlid" → "Khums"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Understand how Islamic legal principles are derived and applied in practice.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #d4a574; box-shadow: 0 2px 8px rgba(212, 165, 116, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #d4a574; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🕌 Foundational Beliefs</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Tawhid" → "Imamate" → "Wilayah" → "Adalah"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Discover how core theological principles interconnect and shape Islamic thought.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #7db3d3; box-shadow: 0 2px 8px rgba(125, 179, 211, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #7db3d3; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">📚 Sacred Texts & Literature</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Holy Quran" → "Nahj al-Balagha" → "Al-Kafi" → "Verse of Wilayah"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Follow connections between primary sources and their scholarly interpretations.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #5a9b97; box-shadow: 0 2px 8px rgba(90, 155, 151, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #5a9b97; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🤲 Spiritual Practices</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Salah" → "Wudu" → "Du'a Kumayl" → "Mourning Rituals"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                See how Islamic practices connect to theological principles and scholarly guidance.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #4a5568; box-shadow: 0 2px 8px rgba(74, 85, 104, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #4a5568; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🌟 Advanced Concepts</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Marjaiyyah" → "Occultation" → "Justice in Governance" → "Intercession"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Engage with complex theological and philosophical concepts about leadership and authority.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #e6b566; box-shadow: 0 2px 8px rgba(230, 181, 102, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #e6b566; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">📜 Historical Development</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Imam Sadiq" → "Al-Kafi" → "Hadith Authentication" → "Sistani"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Trace how classical teachings evolved into contemporary religious guidance.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #8b5a96; box-shadow: 0 2px 8px rgba(139, 90, 150, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #8b5a96; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🔄 Theory to Practice</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Verse of Wilayah" → "Imamate" → "Taqlid" → "Risalah Amaliyyah"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                See how Quranic verses transform into practical religious guidance for daily life.
+                            </em>
+                        </div>
+                        
+                        <div style="background: white; padding: 18px; border-radius: 12px; border-left: 3px solid #2e8b57; box-shadow: 0 2px 8px rgba(46, 139, 87, 0.1); transition: transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <h4 style="color: #2e8b57; margin: 0 0 8px 0; font-size: 1rem; font-weight: 600;">🌍 Influence Networks</h4>
+                            <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                <strong>Explore:</strong> "Imam Ali" → "Nahj al-Balagha" → "Justice in Governance" → "Marjaiyyah"
+                            </div>
+                            <em style="font-size: 0.8rem; color: #666; line-height: 1.3; display: block;">
+                                Discover how one Imam's teachings influence centuries of political and spiritual thought.
+                            </em>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Quick Access Tips -->
+                <div style="background: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid rgba(102, 102, 102, 0.15);">
+                    <h4 style="color: #666; margin: 0 0 12px 0; font-size: 1.125rem; font-weight: 700; text-align: center;">⌨️ Quick Access Tips</h4>
+                    <div style="font-size: 0.95rem; color: #555; text-align: center; line-height: 1.5;">
+                        Press <strong>"/"</strong> to search instantly • <strong>"?"</strong> for help • <strong>"Escape"</strong> to reset view
+                    </div>
+                </div>
+                
+                <!-- Call to Action -->
+                <div style="background: linear-gradient(135deg, rgba(125, 179, 211, 0.15) 0%, rgba(244, 198, 79, 0.15) 100%); padding: 24px; border-radius: 16px; border: 1px solid rgba(125, 179, 211, 0.3);">
+                    <p style="margin: 0 0 16px 0; color: #2856A3; font-weight: 600; font-size: 1.1rem; text-align: center;">💡 <strong>Ready to Explore?</strong></p>
+                    <p style="margin: 0; color: #444; line-height: 1.6; text-align: center; font-size: 0.95rem;">
+                        Close this modal and search for any concept above. Hover over nodes to see details, click to explore connections. Each link reveals how Islamic knowledge developed across centuries.
+                    </p>
+                </div>
+                
+                <!-- Close Modal Button -->
+                <div style="text-align: center; margin-top: 32px;">
+                    <button onclick="closeLearningModal()" style="background: linear-gradient(135deg, #2856A3 0%, #f4c64f 100%); color: white; border: none; padding: 16px 32px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s ease; box-shadow: 0 4px 12px rgba(40, 86, 163, 0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        Start Exploring →
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Learning Features JavaScript -->
+    <script>
+        // Learning Paths Data with authentic progressions
+        const learningPaths = {
+            "beginner_theology": {
+                name: "Understanding Core Beliefs",
+                nodes: ["tawhid", "adalah", "imamate", "ismah", "maad"],
+                description: "Master the five principles of Shia faith (Usul al-Din)",
+                estimatedTime: "2-3 hours"
+            },
+            "jurisprudence_journey": {
+                name: "Islamic Law Foundations", 
+                nodes: ["usul_fiqh", "aql", "ijtihad", "taqlid", "marjaiyyah"],
+                description: "Explore how Islamic law is derived in Shia methodology",
+                estimatedTime: "3-4 hours"
+            },
+            "classical_scholarship": {
+                name: "Major Scholars & Their Works",
+                nodes: ["imam_sadiq", "sheikh_mufid", "sharif_murtada", "sheikh_tusi", "allamah_hilli"],
+                description: "Journey through foundational scholarship chain",
+                estimatedTime: "4-5 hours"
+            },
+            "spiritual_practice": {
+                name: "Worship & Spiritual Development",
+                nodes: ["wudu", "salah", "dua", "mourning", "hajj"],
+                description: "Essential practices for spiritual growth",
+                estimatedTime: "2-3 hours"
+            }
+        };
+
+        // "Did you know?" facts for each node type
+        const didYouKnowFacts = {
+            "scholar": [
+                "Imam Ja'far as-Sadiq taught over 4,000 students, including founders of Sunni schools",
+                "Sheikh al-Tusi founded Najaf Seminary in 1057 CE, still active today after 1000 years",
+                "Al-Kulayni spent 20 years compiling Al-Kafi with 16,199 authentic narrations"
+            ],
+            "book": [
+                "Nahj al-Balagha contains 239 sermons, 79 letters, and 489 short sayings",
+                "Al-Kafi's 8 volumes form the foundation of Shia jurisprudence and theology",
+                "The Holy Quran has been preserved in the same text across all Islamic sects"
+            ],
+            "theology": [
+                "The five principles of Shia faith are: Tawhid, Adalah, Imamate, Ma'ad, and Ismah",
+                "Wilayah means both spiritual authority and love/devotion to the Ahl al-Bayt",
+                "Barzakh is the intermediate state between death and resurrection"
+            ],
+            "jurisprudence": [
+                "Ijtihad in Shia Islam allows ongoing legal reasoning by qualified scholars",
+                "Aql (reason) is uniquely emphasized in Shia legal methodology",
+                "Khums (one-fifth tax) helps support religious education and the needy"
+            ],
+            "practice": [
+                "Salah involves specific recitations and movements performed 5 times daily",
+                "Mourning rituals for Imam Hussain draw millions to Karbala annually",
+                "Du'a Kumayl is recited every Thursday night by devout Shia Muslims"
+            ],
+            "verse": [
+                "The Verse of Wilayah (5:55) is central to Shia beliefs about leadership",
+                "Hadith of Ghadir was proclaimed before 100,000+ pilgrims",
+                "Verse of Purification (33:33) establishes the special status of Ahl al-Bayt"
+            ],
+            "concept": [
+                "Marjaiyyah system provides contemporary guidance through qualified scholars",
+                "Occultation doctrine explains the Twelfth Imam's hidden presence",
+                "Hadith authentication uses chains of transmission to verify authenticity"
+            ]
+        };
+
+        // Dynamic path determination based on current node
+        function determineLearningPath(nodeId, nodeType) {
+            // Find which path contains this node
+            for (const [pathKey, path] of Object.entries(learningPaths)) {
+                if (path.nodes.includes(nodeId)) {
+                    const currentIndex = path.nodes.indexOf(nodeId);
+                    const totalSteps = path.nodes.length;
+                    const completed = currentIndex;
+                    const nextNode = currentIndex < totalSteps - 1 ? path.nodes[currentIndex + 1] : null;
+                    
+                    return {
+                        pathName: path.name,
+                        progress: `${completed}/${totalSteps}`,
+                        currentStep: currentIndex + 1,
+                        totalSteps: totalSteps,
+                        nextNode: nextNode,
+                        pathNodes: path.nodes
+                    };
+                }
+            }
+            
+            // Default path based on node type
+            const defaultPaths = {
+                "theology": "beginner_theology",
+                "jurisprudence": "jurisprudence_journey", 
+                "scholar": "classical_scholarship",
+                "practice": "spiritual_practice"
+            };
+            
+            const defaultPath = learningPaths[defaultPaths[nodeType]] || learningPaths["beginner_theology"];
+            return {
+                pathName: defaultPath.name,
+                progress: "0/4",
+                currentStep: 1,
+                totalSteps: defaultPath.nodes.length,
+                nextNode: defaultPath.nodes[0],
+                pathNodes: defaultPath.nodes
+            };
+        }
+
+        // Update sidebar learning path information
+        function updateSidebarLearningPath(nodeData) {
+            const pathInfo = determineLearningPath(nodeData.id, nodeData.type);
+            
+            // Update progress indicators in sidebar
+            const sidebarPathProgress = document.getElementById('sidebarPathProgress');
+            const sidebarPathInfo = document.getElementById('sidebarPathInfo');
+            
+            if (sidebarPathProgress) {
+                const totalSteps = pathInfo.totalSteps;
+                const currentStep = pathInfo.currentStep;
+                
+                // Generate progress visualization
+                let progressHTML = '';
+                for (let i = 1; i <= Math.min(totalSteps, 4); i++) {
+                    if (i < currentStep) {
+                        // Completed step
+                        progressHTML += `<div style="width: 20px; height: 20px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;">✓</div>`;
+                    } else if (i === currentStep) {
+                        // Current step
+                        progressHTML += `<div style="width: 20px; height: 20px; background: #fbbf24; border-radius: 50%; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; color: #0d1117; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">●</div>`;
+                    } else {
+                        // Future step
+                        progressHTML += `<div style="width: 20px; height: 20px; background: #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 10px;">○</div>`;
+                    }
+                    
+                    // Add connector (except for last step)
+                    if (i < Math.min(totalSteps, 4)) {
+                        const connectorColor = i < currentStep ? '#10b981' : (i === currentStep ? '#fbbf24' : '#374151');
+                        progressHTML += `<div style="flex: 1; height: 2px; background: ${connectorColor};"></div>`;
+                    }
+                }
+                
+                sidebarPathProgress.innerHTML = progressHTML;
+            }
+            
+            if (sidebarPathInfo) {
+                sidebarPathInfo.innerHTML = `
+                    <div><strong>${pathInfo.pathName}</strong></div>
+                    <div>Progress: ${pathInfo.progress} • Step ${pathInfo.currentStep} of ${pathInfo.totalSteps}</div>
+                    ${pathInfo.nextNode ? `<div style="margin-top: 4px;">Next: <span style="color: #f4c64f;">${pathInfo.nextNode}</span></div>` : ''}
+                `;
+            }
+            
+            // Store current learning path for "Show Path" button
+            window.currentLearningPath = pathInfo.pathNodes;
+        }
+
+        // Update learning path visuals when node is hovered
+        function updateLearningPathDisplay(nodeData) {
+            const pathInfo = determineLearningPath(nodeData.id, nodeData.type);
+            
+            // Update progress indicators
+            const progressContainer = document.getElementById('learningPathProgress');
+            if (progressContainer) {
+                const totalSteps = pathInfo.totalSteps;
+                const currentStep = pathInfo.currentStep;
+                
+                // Generate progress visualization
+                let progressHTML = '';
+                for (let i = 1; i <= Math.min(totalSteps, 4); i++) {
+                    if (i < currentStep) {
+                        // Completed step
+                        progressHTML += `<div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;">✓</div>`;
+                    } else if (i === currentStep) {
+                        // Current step
+                        progressHTML += `<div style="width: 24px; height: 24px; background: #fbbf24; border-radius: 50%; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; color: #0d1117; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">●</div>`;
+                    } else {
+                        // Future step
+                        progressHTML += `<div style="width: 24px; height: 24px; background: #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 10px;">○</div>`;
+                    }
+                    
+                    // Add connector (except for last step)
+                    if (i < Math.min(totalSteps, 4)) {
+                        const connectorColor = i < currentStep ? '#10b981' : (i === currentStep ? '#fbbf24' : '#374151');
+                        progressHTML += `<div style="flex: 1; height: 2px; background: ${connectorColor};"></div>`;
+                    }
+                }
+                
+                progressContainer.innerHTML = progressHTML;
+            }
+            
+            // Update progress text
+            const progressText = document.getElementById('pathProgressText');
+            if (progressText) {
+                const nextNodeName = pathInfo.nextNode ? 
+                    graphData.nodes.find(n => n.id === pathInfo.nextNode)?.name || 'Next Topic' : 
+                    'Path Complete';
+                    
+                progressText.innerHTML = `
+                    Progress: ${pathInfo.progress} completed • Current: <span style="color: #fbbf24; font-weight: 600;">${nodeData.name}</span> • Next: <span style="color: #10b981;">${nextNodeName}</span>
+                `;
+            }
+            
+            // Update "Did you know?" fact (consistent, not random)
+            const didYouKnowElement = document.getElementById('didYouKnow');
+            if (didYouKnowElement) {
+                const facts = didYouKnowFacts[nodeData.type] || ["This node contains fascinating connections!"];
+                // Use first fact for consistency instead of random rotation
+                const fact = facts[0];
+                didYouKnowElement.innerHTML = `💡 "Did you know?" ${fact}`;
+            }
+            
+            // Show quote section for verse nodes
+            const quoteSection = document.getElementById('quoteSection');
+            const quoteText = document.getElementById('quoteText');
+            const quoteTranslation = document.getElementById('quoteTranslation');
+            
+            if (nodeData.type === 'verse' && nodeData.quote) {
+                if (quoteSection) {
+                    quoteSection.style.display = 'block';
+                    
+                    // Check if it's Arabic text (contains Arabic characters)
+                    const isArabic = /[\u0600-\u06FF]/.test(nodeData.quote);
+                    
+                    if (isArabic) {
+                        // Arabic quote with English description as translation
+                        if (quoteText) {
+                            quoteText.innerHTML = `<span style="font-family: 'Times New Roman', serif; font-size: 1.1rem; direction: rtl; text-align: right;">"${nodeData.quote}"</span>`;
+                        }
+                        if (quoteTranslation) {
+                            quoteTranslation.innerHTML = `<em>"${nodeData.description}"</em>`;
+                        }
+                    } else {
+                        // English quote
+                        if (quoteText) {
+                            quoteText.innerHTML = `"${nodeData.quote}"`;
+                        }
+                        if (quoteTranslation) {
+                            quoteTranslation.innerHTML = `<em>${nodeData.description}</em>`;
+                        }
+                    }
+                }
+            } else {
+                // Hide quote section for non-verse nodes
+                if (quoteSection) {
+                    quoteSection.style.display = 'none';
+                }
+            }
+        }
+
+        // Show learning path on graph
+        function showLearningPathOnGraph(pathNodes) {
+            // Highlight path nodes
+            node.style("opacity", d => pathNodes.includes(d.id) ? 1 : 0.3);
+            labels.style("opacity", d => pathNodes.includes(d.id) ? 1 : 0.3);
+            
+            // Highlight connections between path nodes
+            link.style("opacity", l => {
+                const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                return (pathNodes.includes(sourceId) && pathNodes.includes(targetId)) ? 0.8 : 0.1;
+            });
+            
+            // Center view on path nodes
+            const pathNodeData = graphData.nodes.filter(n => pathNodes.includes(n.id));
+            if (pathNodeData.length > 0) {
+                centerOnNodeGroup(pathNodeData);
+            }
+        }
+
+        // Add event listener for "Show Path on Graph" button
+        document.addEventListener('DOMContentLoaded', function() {
+            const showPathBtn = document.getElementById('showPathBtn');
+            if (showPathBtn) {
+                showPathBtn.addEventListener('click', function() {
+                    // Get current path info (you'll need to store this when updating display)
+                    const currentPathNodes = window.currentLearningPath || learningPaths.beginner_theology.nodes;
+                    showLearningPathOnGraph(currentPathNodes);
+                });
+            }
+            
+            // Add background click to unpin sidebar
+            document.addEventListener('click', function(event) {
+                const sidebarContent = document.getElementById("sidebarContent");
+                const graphSidebar = document.getElementById("graphSidebar");
+                const clickedInsideSidebar = graphSidebar && graphSidebar.contains(event.target);
+                const clickedOnNode = event.target.closest('circle') || event.target.closest('text');
+                
+                // If clicked outside sidebar and not on a node, unpin the sidebar
+                if (!clickedInsideSidebar && !clickedOnNode && sidebarContent && sidebarContent.getAttribute('data-pinned')) {
+                    unpinSidebar();
+                }
+            });
+        });
+        
+        // Function to unpin sidebar and reset to default state
+        function unpinSidebar() {
+            const sidebarContent = document.getElementById("sidebarContent");
+            if (sidebarContent) {
+                sidebarContent.removeAttribute('data-pinned');
+                
+                // Reset sidebar to default state
+                sidebarContent.innerHTML = `
+                    <div style="opacity: 0.7; text-align: center; margin-top: 60px;">
+                        <h3 style="margin: 0 0 12px 0; color: #f4c64f; font-size: 1.2rem;">📚 Knowledge Explorer</h3>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">• <strong>Search</strong> scholars, books, concepts<br>• <strong>Hover</strong> nodes for details & connections<br>• <strong>Click</strong> to pin content & view quotes<br>• <strong>Learning paths</strong> guide your journey<br>• <strong>Keyboard shortcuts</strong> for navigation</p>
+                    </div>
+                `;
+                
+                // Reset graph visualization
+                node.style("opacity", 1);
+                labels.style("opacity", 1);
+                link.style("opacity", 0.3).classed("highlighted", false);
+            }
+        }
+
+        // CSS for pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.1); opacity: 0.8; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    
+</body>
+</html>
