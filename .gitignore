@@ -5,3 +5,6 @@
 !kg-demo.html
 !netlify.toml
 !.gitignore
+
+# Local Netlify folder
+.netlify
