@@ -1,6 +1,6 @@
 [build]
-  publish = "dist"
-  command = "mkdir -p dist && cp kg-demo.html dist/index.html"
+  # No build process needed - static ES6 modules
+  publish = "."
   
 [build.environment]
   NODE_VERSION = "18"
@@ -56,18 +56,18 @@
 # Redirect rules - order matters, put specific redirects first
 [[redirects]]
   from = "/graph"
-  to = "/index.html"
+  to = "/kg-demo.html"
   status = 301
 
 [[redirects]]
   from = "/knowledge-graph"
-  to = "/index.html"
+  to = "/kg-demo.html"
   status = 301
 
-# Main redirect - root to index.html (must be last)
+# Main redirect - root to kg-demo.html (must be last)
 [[redirects]]
   from = "/"
-  to = "/index.html"
+  to = "/kg-demo.html"
   status = 200
 
 # CSP for enhanced security (ES6 modules compatible)
