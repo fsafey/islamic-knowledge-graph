@@ -9,6 +9,7 @@ import { determineLearningPath } from './learning-paths.js';
 // Note: timeout management handled directly in graph-core.js
 import { getNodeName, generateLearningGuidance } from '../utils/graph-utils.js';
 import { DOMManager } from './dom-manager.js';
+import { richContentManager } from '../utils/rich-content-manager.js';
 
 let sidebarPinned = false;
 
@@ -28,7 +29,15 @@ export function updateSidebar(nodeData, pin = false) {
             sidebarContent.setAttribute('data-pinned', 'true');
         }
 
-    // Create enhanced sidebar content
+        // Check if enhanced content is available
+        if (richContentManager.hasEnhancedContent(nodeData.id)) {
+            // Use rich content manager for enhanced nodes
+            const richContent = richContentManager.generateRichContentHTML(nodeData);
+            sidebarContent.innerHTML = richContent;
+            return;
+        }
+
+    // Create enhanced sidebar content for basic nodes
     const hasMoreContent = (nodeData.description || "").length > 500 || 
                           nodeData.quote || 
                           nodeData.institutions || 

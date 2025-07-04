@@ -16,7 +16,8 @@ Discover connections between scholars, texts, concepts, and contemporary applica
 ## 🌟 **Features**
 
 ### 📊 **Interactive Visualization**
-- **D3.js-powered graph** with 63 nodes and 86 connections
+- **D3.js-powered graph** with **66 nodes** and **140+ connections**
+- **Streamlined tooltips** with scannable relationship indicators
 - **Hover interactions** reveal detailed information and connections
 - **Search functionality** with real-time filtering and suggestions
 - **Learning paths** tailored to different educational personas
@@ -103,11 +104,25 @@ islamic-knowledge-graph/
 
 ## 🎯 **Educational Content**
 
+### **Knowledge Graph Composition (66 Total Nodes)**
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| **📚 Books & Texts** | 13 | Al-Kafi, Nahj al-Balagha, Al-Irshad, Holy Quran |
+| **👨‍🎓 Scholars & Imams** | 11 | Imam Ali, Imam Sadiq, Sheikh al-Mufid, Sistani |
+| **🕌 Theological Concepts** | 11 | Tawhid, Imamate, Ismah, Marjaiyyah, Occultation |
+| **⚖️ Jurisprudential Methods** | 8 | Ijtihad, Usul al-Fiqh, Khums, Taqlid, Aql |
+| **🙏 Religious Practices** | 7 | Salah, Hajj, Zakat, Mourning Rituals, Du'a |
+| **💭 Core Concepts** | 6 | Justice in Governance, Hadith Authentication |
+| **📜 Verses & Traditions** | 5 | Verse of Wilayah, Hadith Ghadir, Du'a Kumayl |
+| **🌐 Contemporary Applications** | 5 | Islamic Banking, Medical Ethics, Environmental Ethics |
+
 ### **Scholars Featured**
-- **Classical Imams**: Ali ibn Abi Talib, Ja'far al-Sadiq, Muhammad al-Baqir
+- **Classical Imams**: Ali ibn Abi Talib, Ja'far al-Sadiq, Muhammad al-Mahdi
 - **Medieval Scholars**: Sheikh al-Mufid, Sheikh al-Tusi, Allamah al-Hilli
-- **Contemporary Authorities**: Grand Ayatollah Sistani, Ayatollah Khamenei
-- **Modern Academics**: Seyyed Hossein Nasr, Abdolkarim Soroush
+- **Hadith Compilers**: Muhammad al-Kulayni, Sheikh al-Saduq
+- **Contemporary Authorities**: Grand Ayatollah Sistani
+- **Historical Bridges**: Safavid Establishment, Colonial Period Scholars
 
 ### **Learning Paths Available**
 - 🌟 **New Muslims**: Foundational concepts and practices

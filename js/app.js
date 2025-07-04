@@ -13,6 +13,7 @@ import {
     resetGraphView,
     unpinSidebar
 } from './core/graph-core.js';
+import { InteractionStateManager } from './core/interaction-state-manager.js';
 import { initializeSearch } from './ui/search.js';
 import { loadSavedProgress, initializeLearningPathEvents } from './ui/learning-paths.js';
 import { initializeMobile } from './ui/mobile.js';
@@ -24,6 +25,12 @@ import { initializeConnectionVisualization } from './ui/connection-visualization
 import { initializeEnhancedModal, showEnhancedModal } from './ui/enhanced-modal.js';
 import { initializeSidebarAnimations } from './ui/sidebar-animations.js';
 import { initializeProgressVisualization } from './ui/progress-visualization.js';
+
+// Import Rich Content Manager for enhanced nodes
+import { richContentManager } from './utils/rich-content-manager.js';
+
+// Import Enhanced Search for improved discovery
+import { enhancedSearch } from './ui/enhanced-search.js';
 
 /**
  * Initialize the entire application
@@ -104,15 +111,40 @@ export function initializeApp() {
         initializeSidebarAnimations();
         initializeProgressVisualization();
         
-        // Show startup notification
+        // Show startup notification with enhanced search info
+        const enhancedNodesCount = richContentManager.enhancedNodes.size;
         createAdvancedNotification('Islamic Knowledge Graph initialized successfully!', 'success', {
-            subtitle: `Loaded ${graphData.nodes.length} nodes and ${graphData.links.length} connections`,
+            subtitle: `Loaded ${graphData.nodes.length} nodes (${enhancedNodesCount} enhanced ⭐) and ${graphData.links.length} connections`,
             duration: 3000,
             position: 'top-center'
         });
         
         console.log('✅ Islamic Knowledge Graph with advanced visual enhancements initialized successfully!');
         console.log(`📊 Loaded ${graphData.nodes.length} nodes and ${graphData.links.length} connections`);
+        console.log('🎯 InteractionStateManager ready - hover/drag conflicts resolved!');
+        
+        // Add global debugging helpers
+        window.debugInteractions = () => {
+            console.log('🔍 Current Interaction State:', InteractionStateManager.getDebugInfo());
+        };
+        
+        // Enable detailed logging for diagnosis
+        window.enableDiagnosticLogging = () => {
+            console.log('🔧 DIAGNOSTIC LOGGING ENABLED - All hover/drag events will be logged');
+            console.log('📝 Instructions:');
+            console.log('   • Move mouse over nodes to see hover events');
+            console.log('   • Drag nodes to see drag events');
+            console.log('   • Watch for state transitions and conflicts');
+            console.log('   • Use window.debugInteractions() to check current state');
+            console.log('   • Use window.disableDiagnosticLogging() to stop');
+        };
+        
+        window.disableDiagnosticLogging = () => {
+            console.log('🔇 Diagnostic logging would be disabled (not implemented yet)');
+        };
+        
+        // Auto-enable diagnostic logging for debugging
+        window.enableDiagnosticLogging();
         
     } catch (error) {
         console.error('❌ Failed to initialize application:', error);
@@ -217,5 +249,6 @@ if (document.readyState === 'loading') {
 // Export for external access if needed
 export { resetView };
 
-// Make enhanced modal available globally for easy access
+// Make enhanced modal and rich content manager available globally for easy access
 window.showEnhancedLearningModal = showEnhancedModal;
+window.richContentManager = richContentManager;

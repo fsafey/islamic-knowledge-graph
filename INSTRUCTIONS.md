@@ -37,3 +37,5 @@ npx serve -l 8080
 - **Zero build tools** - Pure ES6 modules
 - **Auto-deploy** - Push to main branch triggers Netlify deployment
 - **Modular architecture** - Core, Data, UI, Utils layers
+- **Current scale** - 66 nodes with 140+ streamlined relationships
+- **Enhanced tooltips** - Scannable 2-4 word relationship indicators

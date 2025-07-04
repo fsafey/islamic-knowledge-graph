@@ -5,9 +5,11 @@
  * @version 1.0.0
  * 
  * Purpose: Manages all tooltips across the application to prevent conflicts
- * Dependencies: D3.js
+ * Dependencies: D3.js, Rich Content Manager
  * Exports: Tooltip management functions
  */
+
+import { richContentManager } from './rich-content-manager.js';
 
 /**
  * Centralized tooltip manager to prevent conflicts and ensure proper cleanup
@@ -39,20 +41,34 @@ export class TooltipManager {
         
         const tooltipId = `relationship-tooltip-${++this.tooltipCounter}`;
         
+        // Build enhanced tooltip content
+        let tooltipContent = `<div style="font-weight: 600; margin-bottom: 4px;">${sourceNode.name} ${linkData.type} ${targetNode.name}</div>`;
+        
+        // Add context description if available
+        if (linkData.contextDescription) {
+            tooltipContent += `<div style="margin-bottom: 4px; font-size: 0.9rem;">${linkData.contextDescription}</div>`;
+        }
+        
+        // Add textual source if available
+        if (linkData.textualSource) {
+            tooltipContent += `<div style="font-size: 0.8rem; font-style: italic; opacity: 0.9;">Source: ${linkData.textualSource}</div>`;
+        }
+        
         const tooltip = d3.select("body").append("div")
             .attr("class", "relationship-tooltip")
             .attr("id", tooltipId)
             .style("position", "absolute")
             .style("background", "rgba(40, 86, 163, 0.95)")
             .style("color", "white")
-            .style("padding", "8px 12px")
+            .style("padding", "10px 12px")
             .style("border-radius", "6px")
             .style("font-size", "0.85rem")
             .style("box-shadow", "0 2px 8px rgba(0,0,0,0.3)")
             .style("z-index", "1000")
-            .style("white-space", "nowrap")
+            .style("max-width", "280px")
+            .style("line-height", "1.3")
             .style("pointer-events", "none")
-            .html(`<strong>${linkData.type}</strong>`)
+            .html(tooltipContent)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 10) + "px")
             .style("opacity", 0);
@@ -103,6 +119,58 @@ export class TooltipManager {
                     this.activeTooltips.delete(tooltipId);
                 });
         }
+    }
+
+    /**
+     * Create enhanced node tooltip with rich content
+     * @param {Object} nodeData - The node data
+     * @param {MouseEvent} event - The mouse event
+     * @returns {string} Tooltip ID
+     */
+    createEnhancedNodeTooltip(nodeData, event) {
+        // Remove any existing node tooltips
+        this.removeTooltipsByClass('node-tooltip');
+        
+        const tooltipId = `node-tooltip-${++this.tooltipCounter}`;
+        
+        // Generate enhanced tooltip content
+        const tooltipContent = richContentManager.generateEnhancedTooltip(nodeData);
+        
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip node-tooltip")
+            .attr("id", tooltipId)
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("background", "linear-gradient(135deg, rgba(40, 86, 163, 0.95) 0%, rgba(125, 179, 211, 0.95) 100%)")
+            .style("color", "white")
+            .style("padding", "12px 16px")
+            .style("border-radius", "8px")
+            .style("border", "1px solid rgba(244, 198, 79, 0.3)")
+            .style("font-size", "0.85rem")
+            .style("max-width", "350px")
+            .style("line-height", "1.4")
+            .style("box-shadow", "0 4px 12px rgba(0, 0, 0, 0.3)")
+            .style("z-index", "9999")
+            .style("opacity", "0")
+            .html(tooltipContent);
+
+        // Position and show tooltip
+        tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px")
+            .style("visibility", "visible")
+            .transition()
+            .duration(200)
+            .style("opacity", "1");
+
+        // Track this tooltip
+        this.activeTooltips.set(tooltipId, {
+            element: tooltip,
+            type: 'node',
+            nodeId: nodeData.id
+        });
+
+        return tooltipId;
     }
 
     /**

@@ -15,27 +15,15 @@ import {
 // NOTE: updateSidebar and showDefaultSidebar now inlined for performance
 // import { updateSidebar, showDefaultSidebar } from '../ui/sidebar.js';
 import { tooltipManager } from '../utils/tooltip-manager.js';
+import { InteractionStateManager } from './interaction-state-manager.js';
 
-// Simple timeout variables exactly like monolithic version
-let hoverTimeout;
+// Legacy timeout variables for search (non-conflicting)
 let searchTimeout;
 
-// Unified timeout manager to prevent conflicts across modules
+// Simplified timeout manager for search only
 export const timeouts = {
-    get hover() { return hoverTimeout; },
-    set hover(value) { hoverTimeout = value; },
     get search() { return searchTimeout; },
     set search(value) { searchTimeout = value; },
-    
-    clearHover() { 
-        clearTimeout(hoverTimeout); 
-        hoverTimeout = null; 
-    },
-    
-    setHover(callback, delay = 100) {
-        clearTimeout(hoverTimeout);
-        hoverTimeout = setTimeout(callback, delay);
-    },
     
     clearSearch() { 
         clearTimeout(searchTimeout); 
@@ -45,11 +33,20 @@ export const timeouts = {
     setSearch(callback, delay = 150) {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(callback, delay);
+    },
+    
+    // Legacy compatibility (deprecated - use InteractionStateManager)
+    clearHover() { 
+        console.warn('timeouts.clearHover() is deprecated - use InteractionStateManager');
+    },
+    
+    setHover(callback, delay = 100) {
+        console.warn('timeouts.setHover() is deprecated - use InteractionStateManager');
     }
 };
 
 let connectionCache = new Map(); // Cache for connected nodes
-let currentHighlightedNode = null; // Track current highlighted node
+// currentHighlightedNode now managed by InteractionStateManager
 
 // PERFORMANCE OPTIMIZATION: Template cache to eliminate dynamic HTML generation
 let sidebarTemplateCache = new Map(); // Cache for pre-rendered sidebar templates
@@ -298,18 +295,25 @@ function benchmarkDOMPerformance() {
 
 /**
  * Pre-compute connections for better performance
- * Exact duplication from original buildConnectionCache function
+ * Optimized from O(n²) to O(n) complexity
  */
 function buildConnectionCache() {
+    // Clear existing cache
+    connectionCache.clear();
+    
+    // Initialize empty sets for all nodes
     graphData.nodes.forEach(node => {
-        const connections = new Set();
-        graphData.links.forEach(link => {
-            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-            if (sourceId === node.id) connections.add(targetId);
-            if (targetId === node.id) connections.add(sourceId);
-        });
-        connectionCache.set(node.id, connections);
+        connectionCache.set(node.id, new Set());
+    });
+    
+    // Single pass through links to build bidirectional connections
+    graphData.links.forEach(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        
+        // Add bidirectional connections
+        connectionCache.get(sourceId)?.add(targetId);
+        connectionCache.get(targetId)?.add(sourceId);
     });
 }
 
@@ -320,6 +324,12 @@ function buildConnectionCache() {
  * Exact duplication from original createEnhancedTooltip function
  */
 function createEnhancedTooltip(d) {
+    // Check if we have rich content available for this node
+    if (window.richContentManager && window.richContentManager.hasEnhancedContent(d.id)) {
+        return window.richContentManager.generateEnhancedTooltip(d);
+    }
+    
+    // Fallback to enhanced basic tooltip for non-enhanced nodes
     let tooltip = `<strong>${d.name}</strong><br/>`;
     tooltip += `<em>Type: ${d.type}</em><br/>`;
     
@@ -355,6 +365,10 @@ function createEnhancedTooltip(d) {
     if (d.priority_level) tooltip += `<strong>Priority:</strong> ${d.priority_level}<br/>`;
     
     tooltip += `<br/>${d.description ? d.description.substring(0, 200) + '...' : d.connections || ''}`;
+    
+    // Add enhancement indicator for non-enhanced nodes
+    tooltip += `<br/><br/><span style="color: #f4c64f; font-size: 0.8rem;">🔄 Enhanced content coming soon</span>`;
+    
     return tooltip;
 }
 
@@ -366,132 +380,85 @@ function createEnhancedTooltip(d) {
  * Drag functions - exact duplication from original
  */
 /**
- * Enhanced drag behavior with smooth motion and visual feedback
- * Optimized for D3 v7 with dynamic alpha/velocity management
+ * State-aware drag behavior - prevents hover conflicts
+ * Uses InteractionStateManager for clean state transitions
  */
 function dragstarted(event, d) {
-    // CRITICAL: Set drag state flag to prevent hover interference
-    d.isDragging = true;
-    window.isDraggingAny = true;
+    console.log(`🖱️ DRAGSTARTED EVENT: ${d.name} | Event active: ${event.active} | Source event: ${event.sourceEvent?.type}`);
     
-    // Prevent event bubbling to avoid conflicts with zoom
-    event.sourceEvent.stopPropagation();
+    // Start drag through state manager
+    const started = InteractionStateManager.startDrag(d, (node) => {
+        console.log(`🎯 DRAG PHYSICS START: Setting up simulation for ${node.name}`);
+        
+        // D3 standard: Only restart simulation if no other drags are active
+        if (!event.active) {
+            console.log(`🔄 SIMULATION: Restarting simulation (alpha: 0.3) for ${node.name}`);
+            simulation.alphaTarget(0.3).restart();
+        } else {
+            console.log(`⏸️ SIMULATION: Not restarting - other drags active for ${node.name}`);
+        }
+        
+        // Fix node position to prevent force interference
+        console.log(`📍 POSITION FIX: Setting fixed position for ${node.name} at (${node.x}, ${node.y})`);
+        node.fx = node.x;
+        node.fy = node.y;
+        
+        // Simple visual feedback
+        console.log(`🎨 DRAG VISUAL: Adding dragging class to ${node.name}`);
+        d3.select(event.sourceEvent.target)
+            .raise()
+            .classed('dragging', true);
+        
+        console.log(`✅ DRAG SETUP COMPLETE: ${node.name} ready for dragging`);
+    });
     
-    // Enhanced "reheat" with optimized alpha target for smoother interaction
-    if (!event.active) {
-        simulation.alphaTarget(0.3).restart();
-        // Temporarily reduce velocity decay for more responsive dragging
-        simulation.velocityDecay(0.2);
-    }
-    
-    // Prevent hover events during simulation changes
-    if (simulation.alpha() > 0.2) {
-        timeouts.clearHover();
-    }
-    
-    // Store initial position and add visual feedback
-    d.fx = d.x;
-    d.fy = d.y;
-    
-    // CRITICAL: Make dragged element transparent to mouse events to prevent hover conflicts
-    const draggedElement = d3.select(event.sourceEvent.target);
-    draggedElement
-        .style("pointer-events", "none")  // Prevent hover interference during drag
-        .style("stroke-width", 4)
-        .style("stroke", "#f4c64f")
-        .style("filter", "brightness(1.3)")
-        .style("cursor", "grabbing");
-    
-    // Disable hover effects on all nodes during drag to prevent conflicts
-    nodeGroup.style("pointer-events", n => n.id === d.id ? "none" : "auto");
-    
-    // Slightly reduce collision force during drag for smoother movement
-    simulation.force("collision").strength(0.3);
-    
-    // Clear any hover timeouts and reset highlights to prevent interference
-    timeouts.clearHover();
-    
-    // Reset hover state before drag starts
-    currentHighlightedNode = null;
-    node.style("opacity", 1);
-    labels.style("opacity", 1);
-    link.style("opacity", 0.3).classed("highlighted", false);
-    
-    // Track drag start for performance monitoring
-    if (window.performanceTracking) {
-        d.dragStartTime = performance.now();
-        window.activeDragCount = (window.activeDragCount || 0) + 1;
+    if (!started) {
+        console.log(`🚫 DRAGSTARTED FAILED: Drag prevented by state manager for ${d.name}`);
+    } else {
+        console.log(`✅ DRAGSTARTED SUCCESS: Drag initiated for ${d.name}`);
     }
 }
 
 function dragged(event, d) {
-    // Smooth position update with momentum consideration
-    const dampening = 0.8; // Slight dampening for smoother movement
-    d.fx = d.fx * (1 - dampening) + event.x * dampening;
-    d.fy = d.fy * (1 - dampening) + event.y * dampening;
+    console.log(`🖱️ DRAGGED EVENT: ${d.name} | Position: (${event.x.toFixed(1)}, ${event.y.toFixed(1)}) | State: ${InteractionStateManager.getCurrentState()}`);
     
-    // Optional: Add drag trail effect for better visual feedback
-    if (simulation.alpha() > 0.1) {
-        // Boost simulation energy slightly during active dragging
-        simulation.alpha(Math.min(simulation.alpha() + 0.01, 0.3));
+    // Only allow dragged if we're in drag state
+    if (InteractionStateManager.getCurrentState() === InteractionStateManager.STATES.DRAGGING) {
+        console.log(`📍 POSITION UPDATE: Moving ${d.name} to (${event.x.toFixed(1)}, ${event.y.toFixed(1)})`);
+        // D3 standard: Direct position update without dampening
+        d.fx = event.x;
+        d.fy = event.y;
+    } else {
+        console.log(`🚫 DRAGGED BLOCKED: Not in dragging state for ${d.name} (state: ${InteractionStateManager.getCurrentState()})`);
     }
 }
 
 function dragended(event, d) {
-    // CRITICAL: Clear drag state flags to restore hover functionality
-    d.isDragging = false;
-    window.isDraggingAny = false;
+    console.log(`🖱️ DRAGENDED EVENT: ${d.name} | Event active: ${event.active} | Source event: ${event.sourceEvent?.type}`);
     
-    // Restore normal simulation parameters
-    if (!event.active) {
-        simulation.alphaTarget(0);
-        // Restore normal velocity decay for natural settling
-        simulation.velocityDecay(0.4);
-    }
-    
-    // Add momentum-based settling with slight delay
-    setTimeout(() => {
-        d.fx = null;
-        d.fy = null;
+    // End drag through state manager
+    InteractionStateManager.endDrag((node) => {
+        console.log(`🎯 DRAG PHYSICS END: Cleaning up simulation for ${node.name}`);
         
-        // Gentle restart to allow natural settling
-        if (simulation.alpha() < 0.1) {
-            simulation.alpha(0.1).restart();
+        // D3 standard: Only cool down simulation if this was the last active drag
+        if (!event.active) {
+            console.log(`❄️ SIMULATION: Cooling down simulation (alpha: 0) for ${node.name}`);
+            simulation.alphaTarget(0);
+        } else {
+            console.log(`🔥 SIMULATION: Keeping simulation active - other drags in progress for ${node.name}`);
         }
-    }, 150); // Brief delay for more natural feel
-    
-    // CRITICAL: Restore pointer events and visual feedback with smooth transition
-    const draggedElement = d3.select(event.sourceEvent.target);
-    draggedElement
-        .transition()
-        .duration(300)
-        .ease(d3.easeCubicOut)
-        .style("stroke-width", 2.5)
-        .style("stroke", "#333")
-        .style("filter", null)
-        .style("cursor", "grab")
-        .on("end", function() {
-            // Restore pointer events after transition completes
-            d3.select(this).style("pointer-events", "auto");
-        });
-    
-    // Re-enable hover effects on all nodes after a brief delay with state cleanup
-    setTimeout(() => {
-        nodeGroup.style("pointer-events", "auto");
-        // Clear any lingering hover state
-        currentHighlightedNode = null;
-    }, 100); // Slightly longer delay to ensure clean state transition
-    
-    // Restore collision force strength
-    simulation.force("collision").strength(0.8);
-    
-    // Performance tracking
-    if (window.performanceTracking && d.dragStartTime) {
-        const dragDuration = performance.now() - d.dragStartTime;
-        console.log(`🎯 Enhanced drag completed in ${dragDuration.toFixed(2)}ms for ${d.name}`);
-        window.activeDragCount = Math.max(0, (window.activeDragCount || 1) - 1);
-        delete d.dragStartTime;
-    }
+        
+        // Unfix node immediately to reactivate forces
+        console.log(`🔓 POSITION UNFIX: Releasing fixed position for ${node.name}`);
+        node.fx = null;
+        node.fy = null;
+        
+        // Remove visual feedback
+        console.log(`🎨 DRAG VISUAL END: Removing dragging class from ${node.name}`);
+        d3.select(event.sourceEvent.target).classed('dragging', false);
+        
+        console.log(`✅ DRAG CLEANUP COMPLETE: ${node.name} drag ended`);
+    });
 }
 
 /**
@@ -542,9 +509,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
         .attr("viewBox", `0 0 ${width} ${height}`);
     
     // Create container for zoom like original
-    const container = svg.append("g");
+    container = svg.append("g");
     
-    // Create tooltip
+    // Create tooltip with stable pointer-events
     tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
@@ -554,8 +521,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
         .style("padding", "10px")
         .style("border-radius", "5px")
         .style("font-size", "12px")
-        .style("pointer-events", "none")
-        .style("z-index", "1000");
+        .style("pointer-events", "none")  // CRITICAL: Prevents hover conflicts
+        .style("z-index", "1000")
+        .style("user-select", "none");    // Prevents text selection conflicts
     
     // Build connection cache for performance
     buildConnectionCache();
@@ -593,8 +561,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             // Store tooltip ID on the link element for tracking
             d3.select(this).attr('data-tooltip-id', tooltipId);
             
-            // Highlight the connection
+            // Highlight the connection with CSS classes for better performance
             d3.select(this)
+                .classed('link-highlighted', true)
                 .attr("stroke-width", 4)
                 .attr("stroke-opacity", 1);
         })
@@ -612,8 +581,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
                 d3.select(this).attr('data-tooltip-id', null);
             }
             
-            // Reset link appearance
+            // Reset link appearance using CSS classes
             d3.select(this)
+                .classed('link-highlighted', false)
                 .attr("stroke-width", d.type === "applies_to" || d.type === "enables" || d.type === "practiced_by" ? 2.5 : 2)
                 .attr("stroke-opacity", 0.6);
         });
@@ -707,9 +677,9 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             .strength(0.8))
         .force("x", d3.forceX(width / 2).strength(0.05))
         .force("y", d3.forceY(height / 2).strength(0.05))
-        .alphaDecay(0.005) // Optimized: Slower decay for smoother settling (was 0.0228)
+        .alphaDecay(0.0228) // D3 standard: 300 iterations for optimal performance
         .velocityDecay(0.4) // Base velocity decay, dynamically adjusted during interactions
-        .alphaTarget(0.01); // Small target to maintain minimal movement for organic feel
+        .alphaTarget(0); // Static layout when not interacting (best practice)
     
     // Enhanced zoom and pan with performance optimization (from original)
     zoom = d3.zoom()
@@ -735,18 +705,7 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
                 simulation.alpha(0.1);
             }
             
-            // Enhanced: Adjust drag sensitivity based on zoom level (only if not dragging)
-            if (nodeGroup && scale !== window.lastZoomScale && !window.isDraggingAny) {
-                const dragSensitivity = Math.max(0.5, Math.min(2.0, 1 / scale));
-                nodeGroup.call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended)
-                    .filter(event => event.button === 0) // Only left mouse button
-                    .touchable(true) // Enable touch support
-                );
-                window.lastZoomScale = scale;
-            }
+            // Note: Removed complex zoom-dependent drag sensitivity adjustment for better performance
         });
     
     svg.call(zoom);
@@ -766,101 +725,125 @@ export function initializeGraph(containerId, graphWidth, graphHeight) {
             .call(zoom.transform, resetTransform);
     });
     
-    // Performance-optimized mouse event handlers - Enhanced with drag conflict prevention
-    nodeGroup.on("mouseover", function(event, d) {
-        // CRITICAL: Prevent hover effects during any drag operation
-        if (window.isDraggingAny || d.isDragging) return;
+    // STABLE hover handlers - using mouseenter/mouseleave for stability
+    nodeGroup.on("mouseenter", function(event, d) {
+        console.log(`🎯 MOUSEENTER EVENT: ${d.name} | Event type: ${event.type} | Target: ${event.target.tagName}`);
         
-        // Use unified timeout management
-        timeouts.clearHover();
+        // Bring node to front for stable interactions
+        d3.select(this).raise();
         
-        // Skip if same node to prevent unnecessary updates - EXACT monolithic logic
-        if (currentHighlightedNode === d.id) return;
-        currentHighlightedNode = d.id;
+        // Stabilize simulation during hover to prevent motion conflicts
+        const currentAlpha = simulation.alpha();
+        if (currentAlpha > 0.3) {
+            console.log(`🔧 SIMULATION STABILIZE: Reducing alpha from ${currentAlpha.toFixed(3)} to 0.1 for ${d.name}`);
+            simulation.alphaTarget(0.1);
+        }
         
-        // Create enhanced tooltip with new metadata
-        tooltip.html(createEnhancedTooltip(d));
+        // Start hover through state manager with simplified callbacks
+        const started = InteractionStateManager.startHover(d, 
+            // onHoverStart callback - OPTIMIZED for stability
+            (nodeData) => {
+                console.log(`📝 STABLE HOVER START: ${nodeData.name}`);
+                
+                // Immediate visual feedback (no DOM queries)
+                const connectedNodes = connectionCache.get(nodeData.id) || new Set();
+                console.log(`🔗 CONNECTIONS: ${nodeData.name} has ${connectedNodes.size} connections`);
+                
+                // Fast highlighting with minimal DOM manipulation
+                node.style("opacity", n => connectedNodes.has(n.id) || n.id === nodeData.id ? 1 : 0.2);
+                labels.style("opacity", n => connectedNodes.has(n.id) || n.id === nodeData.id ? 1 : 0.2);
+                
+                link.style("opacity", l => {
+                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return sourceId === nodeData.id || targetId === nodeData.id ? 0.8 : 0.1;
+                }).classed("highlighted", l => {
+                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return sourceId === nodeData.id || targetId === nodeData.id;
+                });
+                
+                // Defer heavy operations to prevent hover interruption
+                setTimeout(() => {
+                    if (InteractionStateManager.getCurrentNode()?.id === nodeData.id) {
+                        console.log(`🏷️ DEFERRED: Creating tooltip for ${nodeData.name}`);
+                        tooltip.html(createEnhancedTooltip(nodeData));
+                        
+                        console.log(`📋 DEFERRED: Updating sidebar for ${nodeData.name}`);
+                        lightweightSidebarUpdate(nodeData);
+                    }
+                }, 50); // 50ms delay for stability
+                
+                console.log(`✨ STABLE HOVER COMPLETE: ${nodeData.name}`);
+            },
+            // onHoverEnd callback - SIMPLIFIED cleanup
+            (nodeData) => {
+                console.log(`🧹 STABLE HOVER END: ${nodeData ? nodeData.name : 'unknown'}`);
+                
+                // Restore simulation behavior
+                simulation.alphaTarget(0);
+                
+                // Fast cleanup - no heavy DOM operations
+                node.style("opacity", 1);
+                labels.style("opacity", 1);
+                link.style("opacity", 0.3).classed("highlighted", false);
+                
+                // Defer heavy sidebar reset
+                setTimeout(() => {
+                    lightweightShowDefaultSidebar();
+                }, 10);
+            }
+        );
         
-        // PERFORMANCE CRITICAL: Lightweight sidebar update - EXACT match to monolithic
-        lightweightSidebarUpdate(d);
-        
-        // IMPORTANT: Highlight connected nodes using cached connections for performance
-        const connectedNodes = connectionCache.get(d.id) || new Set();
-        
-        // Apply highlighting effects
-        node.style("opacity", n => connectedNodes.has(n.id) || n.id === d.id ? 1 : 0.2);
-        labels.style("opacity", n => connectedNodes.has(n.id) || n.id === d.id ? 1 : 0.2);
-        
-        link.style("opacity", l => {
-            const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
-            const targetId = typeof l.target === 'object' ? l.target.id : l.target;
-            return sourceId === d.id || targetId === d.id ? 0.8 : 0.1;
-        }).classed("highlighted", l => {
-            const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
-            const targetId = typeof l.target === 'object' ? l.target.id : l.target;
-            return sourceId === d.id || targetId === d.id;
-        });
-        
-        // Performance tracking
-        if (window.performanceTracking) {
-            console.log(`Efficiently highlighted ${connectedNodes.size} connected nodes for ${d.name}`);
+        if (!started) {
+            console.log(`🚫 MOUSEENTER FAILED: Hover blocked for ${d.name}`);
+        } else {
+            console.log(`✅ MOUSEENTER SUCCESS: Stable hover started for ${d.name}`);
         }
     })
-    .on("mouseout", function(event, d) {
-        // CRITICAL: Prevent mouseout effects during any drag operation
-        if (window.isDraggingAny || (d && d.isDragging)) return;
-        
-        // Use unified timeout management with drag state check
-        timeouts.setHover(() => {
-            // Double-check drag state before executing mouseout
-            if (window.isDraggingAny) return;
-            
-            currentHighlightedNode = null; // Reset performance tracking
-            
-            // PERFORMANCE CRITICAL: Lightweight default sidebar - EXACT match to monolithic
-            lightweightShowDefaultSidebar();
-            
-            // Reset visual highlights
-            node.style("opacity", 1);
-            labels.style("opacity", 1);
-            link.style("opacity", 0.3).classed("highlighted", false);
-        }, 100); // Brief delay to prevent flicker exactly like monolithic
+    .on("mouseleave", function(event, d) {
+        console.log(`🚪 MOUSELEAVE EVENT: ${d.name} | Event type: ${event.type}`);
+        // End hover through state manager
+        InteractionStateManager.endHover();
     })
     .on("click", function(event, d) {
-        // CRITICAL: Prevent click immediately after drag (check defaultPrevented)
-        if (event.defaultPrevented || d.isDragging) return;
+        // D3 best practice: Use defaultPrevented to distinguish click from drag
+        if (event.defaultPrevented) return;
         
-        // Enhanced click behavior for exploration
-        event.stopPropagation();
-        
-        // Use the smart centering function
-        centerNodeInView(d, null, { width, height, simulation, zoom, svg });
-        
-        // Pin the sidebar content using cached reference
-        timeouts.clearHover();
-        const sidebarContent = cachedDOMElements.sidebarContent;
-        if (sidebarContent) {
-            sidebarContent.setAttribute('data-pinned', 'true');
+        // Handle click through state manager
+        const handled = InteractionStateManager.handleClick(d, (node) => {
+            // Use the smart centering function
+            centerNodeInView(node, null, { width, height, simulation, zoom, svg });
             
-            // Add visual indicator that sidebar is pinned using cached reference
-            const sidebarTitle = cachedDOMElements.sidebarTitle;
-            if (sidebarTitle && !sidebarTitle.innerHTML.includes('📌')) {
-                sidebarTitle.innerHTML = sidebarTitle.innerHTML + ' <span style="color: #f4c64f; font-size: 0.8rem;">📌 Pinned</span>';
+            // Pin the sidebar content using cached reference
+            const sidebarContent = cachedDOMElements.sidebarContent;
+            if (sidebarContent) {
+                sidebarContent.setAttribute('data-pinned', 'true');
+                
+                // Add visual indicator that sidebar is pinned using cached reference
+                const sidebarTitle = cachedDOMElements.sidebarTitle;
+                if (sidebarTitle && !sidebarTitle.innerHTML.includes('📌')) {
+                    sidebarTitle.innerHTML = sidebarTitle.innerHTML + ' <span style="color: #f4c64f; font-size: 0.8rem;">📌 Pinned</span>';
+                }
             }
-        }
+            
+            // For clicks, use the HEAVY version with full content
+            inlineUpdateSidebar(node, true);
+            
+            // Add research insights for pinned content
+            addResearchInsights(node);
+            
+            // Add to navigation history with current transform
+            const currentTransform = d3.zoomTransform(svg.node());
+            if (!window.navigationHistory) window.navigationHistory = [];
+            window.navigationHistory.push({node: node, transform: currentTransform});
+            if (window.navigationHistory.length > 10) {
+                window.navigationHistory.shift();
+            }
+        });
         
-        // For clicks, use the HEAVY version with full content
-        inlineUpdateSidebar(d, true);
-        
-        // Add research insights for pinned content
-        addResearchInsights(d);
-        
-        // Add to navigation history with current transform
-        const currentTransform = d3.zoomTransform(svg.node());
-        if (!window.navigationHistory) window.navigationHistory = [];
-        window.navigationHistory.push({node: d, transform: currentTransform});
-        if (window.navigationHistory.length > 10) {
-            window.navigationHistory.shift();
+        if (!handled) {
+            console.log(`🚫 Click blocked for ${d.name} (current state: ${InteractionStateManager.getCurrentState()})`);
         }
     });
     
@@ -991,7 +974,7 @@ export function setupKeyboardNavigation() {
  * Exact duplication from original resetGraphView function
  */
 export function resetGraphView() {
-    currentHighlightedNode = null;
+    InteractionStateManager.forceReset();
     if (svg) svg.selectAll('circle').style('stroke', '#333').style('stroke-width', 2).style('filter', null);
     if (svg) svg.selectAll('.path-indicator').remove();
     if (node) node.style("opacity", 1);
@@ -1451,6 +1434,43 @@ export function disablePerformanceTracking() {
     console.log('📊 Performance tracking disabled');
 }
 
+/**
+ * Clean up graph resources and event listeners
+ * D3 best practice: Always provide cleanup methods
+ */
+function destroyGraph() {
+    // Stop simulation
+    if (simulation) {
+        simulation.stop();
+    }
+    
+    // Clear performance tracking
+    if (performanceTrackingInterval) {
+        clearInterval(performanceTrackingInterval);
+        performanceTrackingInterval = null;
+    }
+    
+    // Clear all timeouts
+    timeouts.clearHover();
+    timeouts.clearSearch();
+    
+    // Clear caches
+    connectionCache.clear();
+    sidebarTemplateCache.clear();
+    debounceTimers.clear();
+    
+    // Remove tooltip if exists
+    if (tooltip) {
+        tooltip.remove();
+    }
+    
+    // Clear global state
+    InteractionStateManager.forceReset();
+    window.performanceTracking = false;
+    
+    console.log('✅ Graph resources cleaned up');
+}
+
 // Export the core functions and utilities
 export {
     buildConnectionCache,
@@ -1461,5 +1481,6 @@ export {
     inlineUpdateSidebar,
     inlineShowDefaultSidebar,
     lightweightSidebarUpdate,
-    lightweightShowDefaultSidebar
+    lightweightShowDefaultSidebar,
+    destroyGraph
 };

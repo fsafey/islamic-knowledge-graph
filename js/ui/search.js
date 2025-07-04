@@ -8,6 +8,7 @@ import { width, height, zoom, simulation, timeouts, svg } from '../core/graph-co
 import { centerNodeInView, centerOnNodeGroup } from '../utils/graph-utils.js';
 import { DOMManager } from './dom-manager.js';
 import { showSearchNotification } from './notifications.js';
+import { richContentManager } from '../utils/rich-content-manager.js';
 
 // DOM elements - will be cached for performance
 let searchInput, searchSuggestions;
@@ -15,23 +16,33 @@ let searchInput, searchSuggestions;
 // Keyboard navigation state
 let selectedSuggestion = -1;
 
-// Common search terms and synonyms for better matching (from original)
+// Enhanced search terms and synonyms for better matching
 const searchSynonyms = {
-    'ali': ['imam ali', 'amir al-muminin'],
-    'quran': ['holy quran', 'koran'],
-    'prayer': ['salah', 'namaz'],
-    'pilgrimage': ['hajj', 'ziyarat'],
-    'fiqh': ['jurisprudence', 'islamic law'],
-    'hadith': ['tradition', 'narration'],
-    'imam': ['leader', 'guide'],
-    'justice': ['adalah', 'adl']
+    'ali': ['imam ali', 'amir al-muminin', 'lion of god', 'commander of faithful'],
+    'quran': ['holy quran', 'koran', 'book of allah', 'revelation'],
+    'prayer': ['salah', 'namaz', 'worship', 'devotion'],
+    'pilgrimage': ['hajj', 'ziyarat', 'sacred journey'],
+    'fiqh': ['jurisprudence', 'islamic law', 'legal methodology'],
+    'hadith': ['tradition', 'narration', 'prophetic saying'],
+    'imam': ['leader', 'guide', 'religious authority'],
+    'justice': ['adalah', 'adl', 'fairness', 'equity'],
+    'ijtihad': ['independent reasoning', 'legal reasoning', 'scholarly interpretation'],
+    'tawhid': ['divine unity', 'monotheism', 'oneness of god'],
+    'nahj': ['nahj al-balagha', 'peak of eloquence', 'ali sayings'],
+    'kafi': ['al-kafi', 'sufficient', 'hadith collection'],
+    'sistani': ['grand ayatollah', 'maraji', 'religious authority'],
+    'mufid': ['sheikh mufid', 'baghdad scholar', 'shia theologian']
 };
 
-// Popular starting points for beginners (from original)
-const beginnerSuggestions = [
-    'Imam Ali', 'Tawhid', 'Nahj al-Balagha', 'Holy Quran', 'Imamate',
-    'Imam Sadiq', 'Salah', 'Usul al-Fiqh', 'Al-Kafi', 'Wilayah'
-];
+// Enhanced starting points categorized by learning path
+const beginnerSuggestions = {
+    featured: ['Imam Ali', 'Tawhid', 'Nahj al-Balagha', 'Holy Quran'],
+    enhanced: ['Imam Ali', 'Nahj al-Balagha', 'Ijtihad'], // Nodes with rich content
+    scholars: ['Imam Ali', 'Imam Sadiq', 'Sheikh Mufid', 'Sistani'],
+    concepts: ['Tawhid', 'Imamate', 'Ijtihad', 'Marjaiyyah'],
+    practices: ['Salah', 'Hajj', 'Khums', 'Zakat'],
+    texts: ['Nahj al-Balagha', 'Al-Kafi', 'Holy Quran', 'Usul al-Fiqh']
+};
 
 // Note: centerNodeInView now imported from utils/graph-utils.js
 
@@ -46,22 +57,59 @@ function showSearchSuggestions(searchTerm) {
     
     if (!searchTerm || searchTerm.length < 2) {
         if (searchTerm === '') {
-            // Show beginner suggestions when search is empty and focused
-            const suggestions = beginnerSuggestions.slice(0, 5).map(term => 
-                `<div class="suggestion-item" data-term="${term}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; font-size: 0.95em; transition: all 0.2s ease; role: option; tabindex: 0;" onmouseover="this.style.backgroundColor='#fef7ec'; this.style.borderLeft='4px solid #f4c64f'" onmouseout="this.style.backgroundColor='white'; this.style.borderLeft='none'"><strong style="color: #d4a343;">🌟 ${term}</strong> <span style="color: #6b7280;">- Popular starting point</span></div>`
-            ).join('');
+            // Show enhanced suggestions when search is empty and focused
+            const enhancedNodes = beginnerSuggestions.enhanced.map(term => {
+                const hasEnhanced = richContentManager.hasEnhancedContent(term.toLowerCase().replace(/\s+/g, '_'));
+                return `<div class="suggestion-item enhanced" data-term="${term}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; font-size: 0.95em; transition: all 0.2s ease; role: option; tabindex: 0; ${hasEnhanced ? 'background: linear-gradient(90deg, rgba(244, 198, 79, 0.1) 0%, rgba(40, 86, 163, 0.1) 100%);' : ''}" onmouseover="this.style.backgroundColor='${hasEnhanced ? 'rgba(244, 198, 79, 0.2)' : '#fef7ec'}'; this.style.borderLeft='4px solid #f4c64f'" onmouseout="this.style.backgroundColor='${hasEnhanced ? 'rgba(244, 198, 79, 0.1)' : 'white'}'; this.style.borderLeft='none'"><strong style="color: #d4a343;">${hasEnhanced ? '⭐' : '🌟'} ${term}</strong> <span style="color: #6b7280;">- ${hasEnhanced ? 'Enhanced content available' : 'Popular starting point'}</span></div>`;
+            });
             
-            searchSuggestions.innerHTML = '<div style="padding: 12px 16px; font-size: 0.9em; color: #4b5563; font-weight: 700; background: #f9fafb; border-bottom: 2px solid #e5e7eb;">Recommended Starting Points:</div>' + suggestions;
+            const featuredNodes = beginnerSuggestions.featured.slice(1).map(term => 
+                `<div class="suggestion-item" data-term="${term}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; font-size: 0.95em; transition: all 0.2s ease; role: option; tabindex: 0;" onmouseover="this.style.backgroundColor='#fef7ec'; this.style.borderLeft='4px solid #f4c64f'" onmouseout="this.style.backgroundColor='white'; this.style.borderLeft='none'"><strong style="color: #d4a343;">🌟 ${term}</strong> <span style="color: #6b7280;">- Featured topic</span></div>`
+            );
+            
+            const allSuggestions = [...enhancedNodes, ...featuredNodes].join('');
+            
+            searchSuggestions.innerHTML = '<div style="padding: 12px 16px; font-size: 0.9em; color: #4b5563; font-weight: 700; background: #f9fafb; border-bottom: 2px solid #e5e7eb;">Recommended Starting Points:</div>' + allSuggestions;
             searchSuggestions.style.display = 'block';
         }
         return;
     }
     
-    // Find matching nodes
+    // Find matching nodes with enhanced content priority
     const matches = graphData.nodes.filter(d => {
         const name = d.name.toLowerCase();
         const description = d.description.toLowerCase();
-        return name.includes(searchTerm) || description.includes(searchTerm);
+        
+        // Basic matching
+        if (name.includes(searchTerm) || description.includes(searchTerm)) return true;
+        
+        // Enhanced content matching
+        if (richContentManager.hasEnhancedContent(d.id)) {
+            const searchableContent = richContentManager.getSearchableContent(d.id);
+            if (searchableContent && searchableContent.toLowerCase().includes(searchTerm)) {
+                return true;
+            }
+        }
+        
+        return false;
+    });
+    
+    // Prioritize enhanced content nodes in results
+    const sortedMatches = matches.sort((a, b) => {
+        const aHasEnhanced = richContentManager.hasEnhancedContent(a.id);
+        const bHasEnhanced = richContentManager.hasEnhancedContent(b.id);
+        
+        if (aHasEnhanced && !bHasEnhanced) return -1;
+        if (!aHasEnhanced && bHasEnhanced) return 1;
+        
+        // Secondary sort by name match relevance
+        const aNameMatch = a.name.toLowerCase().includes(searchTerm);
+        const bNameMatch = b.name.toLowerCase().includes(searchTerm);
+        
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        
+        return 0;
     }).slice(0, 6);
     
     // Add synonym matches
@@ -77,7 +125,7 @@ function showSearchSuggestions(searchTerm) {
         }
     });
     
-    const allMatches = [...matches, ...synonymMatches.slice(0, 3)]
+    const allMatches = [...sortedMatches, ...synonymMatches.slice(0, 3)]
         .filter((item, index, arr) => arr.findIndex(i => i.id === item.id) === index)
         .slice(0, 6);
     
@@ -94,12 +142,30 @@ function showSearchSuggestions(searchTerm) {
                 'theology': '🕋',
                 'practice': '🤲',
                 'verse': '✨',
-                'concept': '🌟'
+                'concept': '🌟',
+                'contemporary': '🌐'
             }[d.type] || '🔍';
             
-            return `<div class="suggestion-item" data-term="${d.name}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: all 0.2s ease; role: option; tabindex: 0;" onmouseover="this.style.backgroundColor='#f8fafc'; this.style.borderLeft='4px solid #2856A3'" onmouseout="this.style.backgroundColor='white'; this.style.borderLeft='none'">
-                <div style="font-weight: 600; color: #2856A3; font-size: 0.95em;">${typeIcon} ${d.name}</div>
+            // Check if this node has enhanced content
+            const hasEnhanced = richContentManager.hasEnhancedContent(d.id);
+            const enhancedIndicator = hasEnhanced ? ' ⭐' : '';
+            const enhancedStyle = hasEnhanced ? 'background: linear-gradient(90deg, rgba(244, 198, 79, 0.1) 0%, rgba(40, 86, 163, 0.1) 100%);' : '';
+            const enhancedHover = hasEnhanced ? 'rgba(244, 198, 79, 0.2)' : '#f8fafc';
+            const enhancedReset = hasEnhanced ? 'rgba(244, 198, 79, 0.1)' : 'white';
+            
+            // Get quality score if available
+            let qualityIndicator = '';
+            if (hasEnhanced) {
+                const score = richContentManager.getContentQualityScore ? richContentManager.getContentQualityScore(d.id) : null;
+                if (score && score >= 8) {
+                    qualityIndicator = ` <span style="color: #10b981; font-size: 0.8em;">★${score}</span>`;
+                }
+            }
+            
+            return `<div class="suggestion-item ${hasEnhanced ? 'enhanced' : ''}" data-term="${d.name}" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: all 0.2s ease; role: option; tabindex: 0; ${enhancedStyle}" onmouseover="this.style.backgroundColor='${enhancedHover}'; this.style.borderLeft='4px solid #2856A3'" onmouseout="this.style.backgroundColor='${enhancedReset}'; this.style.borderLeft='none'">
+                <div style="font-weight: 600; color: #2856A3; font-size: 0.95em;">${typeIcon} ${d.name}${enhancedIndicator}${qualityIndicator}</div>
                 <div style="font-size: 0.85em; color: #6b7280; margin-top: 4px; line-height: 1.4;">${d.description.substring(0, 85)}${d.description.length > 85 ? '...' : ''}</div>
+                ${hasEnhanced ? '<div style="font-size: 0.75em; color: #f4c64f; margin-top: 2px;">Enhanced content available</div>' : ''}
             </div>`;
         }).join('');
         
@@ -229,13 +295,21 @@ export function initializeSearch() {
             showSearchSuggestions(searchTerm);
             
             if (searchTerm) {
-                // Fuzzy matching for better search results
+                // Enhanced search with content integration
                 const matchingNodes = graphData.nodes.filter(d => {
                     const name = d.name.toLowerCase();
                     const description = d.description.toLowerCase();
                     
-                    // Direct match
+                    // Direct match in basic content
                     if (name.includes(searchTerm) || description.includes(searchTerm)) return true;
+                    
+                    // Search in enhanced content if available
+                    if (richContentManager.hasEnhancedContent(d.id)) {
+                        const searchableContent = richContentManager.getSearchableContent(d.id);
+                        if (searchableContent && searchableContent.toLowerCase().includes(searchTerm)) {
+                            return true;
+                        }
+                    }
                     
                     // Fuzzy matching for typos
                     const words = searchTerm.split(' ');
@@ -263,8 +337,9 @@ export function initializeSearch() {
                 // Batch DOM update for optimal performance - minimize reflows
                 batchHighlightUpdate(matchingIds, connectedIds);
                 
-                // Show search notification
-                showSearchNotification(searchTerm, matchingNodes.length);
+                // Show enhanced search notification with content indicators
+                const enhancedMatches = matchingNodes.filter(node => richContentManager.hasEnhancedContent(node.id));
+                showSearchNotification(searchTerm, matchingNodes.length, enhancedMatches.length);
                 
                 // Intelligent navigation for search results
                 if (matchingNodes.length === 1) {

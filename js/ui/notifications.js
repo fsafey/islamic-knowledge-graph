@@ -281,19 +281,21 @@ export function showLearningPathNotification(pathName, action = 'selected') {
 /**
  * Search result notifications
  */
-export function showSearchNotification(query, resultCount) {
+export function showSearchNotification(query, resultCount, enhancedCount = 0) {
     if (resultCount === 0) {
         createAdvancedNotification(`No results found for "${query}"`, 'warning', {
             subtitle: 'Try: Imam Ali, Tawhid, or Nahj al-Balagha',
             duration: 4000
         });
     } else if (resultCount === 1) {
-        createAdvancedNotification(`Found 1 result for "${query}"`, 'success', {
+        const enhancedText = enhancedCount > 0 ? ' ⭐ Enhanced content available' : '';
+        createAdvancedNotification(`Found 1 result for "${query}"${enhancedText}`, 'success', {
             subtitle: 'Node automatically centered in view',
             duration: 3000
         });
     } else {
-        createAdvancedNotification(`Found ${resultCount} results for "${query}"`, 'info', {
+        const enhancedText = enhancedCount > 0 ? ` (${enhancedCount} with enhanced content ⭐)` : '';
+        createAdvancedNotification(`Found ${resultCount} results for "${query}"${enhancedText}`, 'info', {
             subtitle: 'Scroll to explore all matches',
             duration: 3000
         });
